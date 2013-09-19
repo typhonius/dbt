@@ -1,0 +1,8 @@
+name: "Adam Malone Site"
+environments:
+  prod:
+    server: "poseidon"
+    path: "/var/www/html/adammalone_net"
+  test:
+    server: "hermes"
+    path: "/var/www/html/adammalone_net"

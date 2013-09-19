@@ -1,0 +1,8 @@
+name: "Stalkerspace"
+environments:
+  prod:
+    server: "poseidon"
+    path: "/var/www/html/stalkerspace_com"
+  test:
+    server: "hermes"
+    path: "/var/www/html/stalkerspace_com"

@@ -1,0 +1,10 @@
+<?php
+
+define('ROOT_DIR', dirname(dirname(__FILE__)));
+require_once ROOT_DIR . '/includes/common.inc';
+
+// Load class autoloader
+$loader = require_once ROOT_DIR . '/vendor/autoload.php';
+$loader->add('backup', ROOT_DIR . '/app');
+
+
