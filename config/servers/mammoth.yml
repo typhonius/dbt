@@ -1,4 +1,5 @@
-name: Hermes
-domain: hermes.adammalone.net
-user: root
-sshuser: hermes
+name: Mammoth
+machine: mammoth
+domain: mammoth.adammalone.net
+user: vps
+sshuser: adam

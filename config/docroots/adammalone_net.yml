@@ -1,4 +1,5 @@
 name: "Adam Malone Site"
+machine: "adammalone_net"
 environments:
   prod:
     server: "poseidon"

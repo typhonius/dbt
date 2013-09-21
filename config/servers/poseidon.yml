@@ -1,4 +1,5 @@
 name: Poseidon
+machine: poseidon
 domain: poseidon.adammalone.net
 user: root
 sshuser: poseidon

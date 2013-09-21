@@ -1,6 +1,8 @@
 <?php
 
 define('ROOT_DIR', dirname(dirname(__FILE__)));
+define('CONFIG', ROOT_DIR . '/config');
+
 require_once ROOT_DIR . '/includes/common.inc';
 
 // Load class autoloader

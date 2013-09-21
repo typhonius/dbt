@@ -1,4 +1,5 @@
 name: "Stalkerspace"
+machine: "stalkerspace_com"
 environments:
   prod:
     server: "poseidon"
