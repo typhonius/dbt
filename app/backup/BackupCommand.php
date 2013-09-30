@@ -16,62 +16,70 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\ArrayInput;
 
 define('FILEDIR', 'files');
 define('CODEDIR', 'code');
 
 class BackupCommand extends Command {
-  public $docroot;
-  public $env;
-  public $backup_path;
-  public $backup_file;
-
+  // todo private these
+  private $servers;
+  private $docroots;
+  private $envs;
+  private $backup_path;
+  private $backup_file;
 
   protected function configure() {
     $this
       ->setName("Backup")
       ->setHelp("Help will go here")
       ->setDescription('Backup all available docroots on all available servers.')
-      ->addArgument('docroot', InputArgument::OPTIONAL, 'Which docroots should be backed up?')
-      ->addOption('env', 'e', InputOption::VALUE_OPTIONAL, 'Backup specific environments')
-      //->addOption('docroots', 'd', InputArgument::OPTIONAL, 'Backup specific docroots over all servers')
-      ->addOption('servers', 's', InputOption::VALUE_OPTIONAL, 'Backup all docroots on a particular server')
+      //->addArgument('docroots', InputArgument::OPTIONAL, 'Which docroots should be backed up?')
+      ->addOption('envs', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array('all'))
+      ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots over all servers', array('all'))
+      ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup all docroots on a particular server', array('all'))
       ->addOption('show', null, InputOption::VALUE_NONE, 'Shows Docroots, Servers and Environments available')
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.');
 
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $servers = $input->getOption('servers');
-    var_dump($servers);
-    $name = $input->getArgument('docroot');
-    var_dump($name);
+    if ($input->getOption('show')) {
+      $output->writeln('<info>foo</info>');
+      return;
+    }
+
+    $this->servers = $input->getOption('servers');
+    $this->docroots = $input->getOption('docroots');
+    $this->envs = $input->getOption('envs');
+
+    if ($this->servers[0] == 'all') {
+      $this->servers = $this->loadFromConfig('servers');
+    }
+    if ($this->docroots[0] == 'all') {
+      $this->docroots = $this->loadFromConfig('docroots');
+    }
+    if ($this->envs[0] == 'all') {
+      // TODO parameterise this
+      $this->envs = array('local', 'dev', 'test', 'stage', 'prod');
+    }
+
+    // Nesty nest
+    foreach ($this->servers as $server) {
+      foreach ($this->docroots as $docroot) {
+        foreach ($this->envs as $env) {
+          // TODO have to actually make sure the docroot and env exist on the server.
+          var_dump("server is $server, docroot is $docroot, env is $env");
+        }
+      }
+    }
+
   }
 
-//  protected function getCommandName(InputInterface $input) {
-//    var_dump($input);
-//    return 'Backup OOP2';
-//  }
-
-//  protected function getDefaultCommands()
-//  {
-//    // Keep the core default commands to have the HelpCommand
-//    // which is used when using the --help option
-//    $defaultCommands = parent::getDefaultCommands();
-//
-//    //$defaultCommands[] = new MyCommand();
-//
-//    return $defaultCommands;
-//  }
-
-//  public function getDefinition()
-//  {
-//    $inputDefinition = parent::getDefinition();
-//    // clear out the normal first argument, which is the command name
-//    $inputDefinition->setArguments();
-//
-//    return $inputDefinition;
-//  }
+  private function loadFromConfig($stage) {
+    $config = new Config();
+    return $config->returnInfoArray($stage, 'machine');
+  }
 
   public function runBackup($options) {
     global $configs;

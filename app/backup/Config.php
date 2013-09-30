@@ -16,6 +16,10 @@ class Config {
   public $docroots;
 
   public function __construct() {
+    self::loadConfig();
+  }
+
+  protected function loadConfig() {
     $servers = File::loadFiles(CONFIG . '/servers', '/.*\.yml/');
     $docroots = File::loadFiles(CONFIG . '/docroots', '/.*\.yml/');
 
@@ -29,20 +33,28 @@ class Config {
     }
   }
 
-  public function getAllConfig() {
-    global $configs;
-    $configs->servers = self::getServerConfig();
-    $configs->docroots = self::getDocrootConfig();
-    $configs->local = self::getBackupLocation();
-    return $configs;
-  }
-
   public function getServerConfig() {
     return $this->servers;
   }
 
   public function getDocrootConfig() {
     return $this->docroots;
+  }
+
+  public function returnInfoArray($stage, $param) {
+    foreach ($this->$stage as $obj) {
+      $return[] = $obj->data[$param];
+    }
+    return $return;
+
+    // TODO add in methods for server and docroot loading
+  }
+
+  public function getDocrootList() {
+    foreach ($this->docroots as $docroot) {
+      $docroots[] = $docroot->data['name'];
+    }
+    return $docroots;
   }
 
   public function getBackupLocation() {
