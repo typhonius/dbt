@@ -22,12 +22,17 @@ define('FILEDIR', 'files');
 define('CODEDIR', 'code');
 
 class BackupCommand extends Command {
-  // todo private these
   private $servers;
   private $docroots;
   private $envs;
   private $backup_path;
   private $backup_file;
+  private $config;
+
+  public function __construct() {
+    parent::__construct();
+    $this->config = new Config();
+  }
 
   protected function configure() {
     $this
@@ -69,7 +74,9 @@ class BackupCommand extends Command {
       foreach ($this->docroots as $docroot) {
         foreach ($this->envs as $env) {
           // TODO have to actually make sure the docroot and env exist on the server.
-          var_dump("server is $server, docroot is $docroot, env is $env");
+          if ($this->config->isValidConfig($docroot, $server, $env)) {
+            var_dump("server is $server, docroot is $docroot, env is $env");
+          }
         }
       }
     }
@@ -77,8 +84,7 @@ class BackupCommand extends Command {
   }
 
   private function loadFromConfig($stage) {
-    $config = new Config();
-    return $config->returnInfoArray($stage, 'machine');
+    return $this->config->returnInfoArray($stage, 'machine');
   }
 
   public function runBackup($options) {

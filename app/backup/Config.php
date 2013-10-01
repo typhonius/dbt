@@ -50,6 +50,20 @@ class Config {
     // TODO add in methods for server and docroot loading
   }
 
+  public function isValidConfig($docroot, $server, $env) {
+    // First ensure the docroot machine name is in existence.
+    if ($this->docroots[$docroot]) {
+      // Now check that the environment exists for this docroot.
+      if (array_key_exists($env, $this->docroots[$docroot]->data['environments'])) {
+        // Finally ensure that the server passed to this function is in place on that environment.
+        if ($server == $this->docroots[$docroot]->data['environments'][$env]['server']) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
+  }
+
   public function getDocrootList() {
     foreach ($this->docroots as $docroot) {
       $docroots[] = $docroot->data['name'];
