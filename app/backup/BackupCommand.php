@@ -28,6 +28,9 @@ class BackupCommand extends Command {
   private $backup_path;
   private $backup_file;
   private $config;
+  private $docroot;
+  private $server;
+  private $env;
 
   public function __construct() {
     parent::__construct();
@@ -75,7 +78,11 @@ class BackupCommand extends Command {
         foreach ($this->envs as $env) {
           // TODO have to actually make sure the docroot and env exist on the server.
           if ($this->config->isValidConfig($docroot, $server, $env)) {
-            var_dump("server is $server, docroot is $docroot, env is $env");
+            $this->docroot = $docroot;
+            $this->server = $server;
+            $this->env = $env;
+            $output->writeln("<info>Running backup of $docroot, $env from $server</info>");
+            $this->runBackup($output);
           }
         }
       }
@@ -87,36 +94,34 @@ class BackupCommand extends Command {
     return $this->config->returnInfoArray($stage, 'machine');
   }
 
-  public function runBackup($options) {
-    global $configs;
-
-
-
-    foreach ($configs->docroots as $docroots) {
-      // opts match machine name do that
-      // or all do all
-      // or none show opts help
-      // wrong opts throw an error
-      var_dump($docroots);
-
-      //throw new IncorrectSitenameException();
-
+  private function runBackup(OutputInterface $output) {
+    $this->backup_path = $this->generateBackupPath();
+    //$output->writeln("<info>Generating backup paths</info>");
+    $this->generateBackupDirs();
+    // Ensure libssh2 and PHP ssh2 are installed
+    if (function_exists('ssh2_connect')) {
+      $connection = ssh2_connect($this->server);
+      //ssh2_connect('shell.example.com', 22, array('hostkey'=>'ssh-rsa'));
+//      if (ssh2_auth_pubkey_file($connection, 'username',
+//        '/home/username/.ssh/id_rsa.pub',
+//        '/home/username/.ssh/id_rsa', 'secret')) {
+//        echo "Public Key Authentication Successful\n";
+//      } else {
+//        die('Public Key Authentication Failed');
+//      }
+    }
+    else {
+      // Otherwise fall back to the good old shell escape
     }
 
-    $this->docroot = 'adammalone_net';
-    $this->env = 'test';
-    $this->backup_path = self::generateRootBackupDirName($this->docroot, $this->env);
-    //$this->backup_file = self::generateBackupFileName($this->docroot, $this->env);
-
-
-    //var_dump($this);
-    //exec('rsync -aPh hermes:/var/www/html/adammalone/docroot/sites/all/modules/views /tmp');
 
   }
 
-  private function generateRootBackupDirName($docroot, $env) {
+  private function generateBackupPath() {
     global $configs;
-    $dir = "{$configs->local}/" . $this->getBackupServer($docroot, $env) . "/{$docroot}/{$env}";
+    $dir = "{$configs->local}/$this->server/{$this->docroot}/{$this->env}";
+
+
 
     // TODO use File::checkDirectory
     if (!file_exists($dir)) { // TODO include force parameter
@@ -124,6 +129,13 @@ class BackupCommand extends Command {
     }
 
     return $dir;
+  }
+
+  private function generateBackupDirs() {
+    if (file_exists($this->backup_path)) {
+      @mkdir("{$this->backup_path}/" . CODEDIR, 0755, TRUE);
+      @mkdir("{$this->backup_path}/" . FILEDIR, 0755, TRUE);
+    }
   }
 
   private function generateFilesBackupDirName($docroot, $env) {
@@ -146,8 +158,8 @@ class BackupCommand extends Command {
     return $dir;
   }
 
-  private function generateBackupFileName($docroot, $env) {
-    return "{$docroot}-{$env}-" . date('Y-m-d');
+  private function generateBackupFileName() {
+    return "{$this->docroot}-{$this->env}-" . date('Y-m-d');
   }
 
   private function getBackupServer($docroot, $env) {
