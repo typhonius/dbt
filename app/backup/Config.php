@@ -33,12 +33,17 @@ class Config {
     }
   }
 
-  public function getServerConfig() {
-    return $this->servers;
+  public function getConfigByKey($stage, $key) {
+    // TODO return all server info perhaps? Or all docroot info - this would be useful for SCPing stuff
+    // Might be better to use getServerConfig below to get the server config...
   }
 
-  public function getDocrootConfig() {
-    return $this->docroots;
+  public function getServerConfig($server) {
+    return $this->servers[$server]->data;
+  }
+
+  public function getDocrootConfig($docroot) {
+    return $this->docroots[$docroot]->data;
   }
 
   public function returnInfoArray($stage, $param) {

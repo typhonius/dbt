@@ -78,8 +78,8 @@ class BackupCommand extends Command {
         foreach ($this->envs as $env) {
           // TODO have to actually make sure the docroot and env exist on the server.
           if ($this->config->isValidConfig($docroot, $server, $env)) {
-            $this->docroot = $docroot;
-            $this->server = $server;
+            $this->docroot = $this->config->getDocrootConfig($docroot);
+            $this->server = $this->config->getServerConfig($server);
             $this->env = $env;
             $output->writeln("<info>Running backup of $docroot, $env from $server</info>");
             $this->runBackup($output);
@@ -98,30 +98,17 @@ class BackupCommand extends Command {
     $this->backup_path = $this->generateBackupPath();
     //$output->writeln("<info>Generating backup paths</info>");
     $this->generateBackupDirs();
-    // Ensure libssh2 and PHP ssh2 are installed
-    if (function_exists('ssh2_connect')) {
-      $connection = ssh2_connect($this->server);
-      //ssh2_connect('shell.example.com', 22, array('hostkey'=>'ssh-rsa'));
-//      if (ssh2_auth_pubkey_file($connection, 'username',
-//        '/home/username/.ssh/id_rsa.pub',
-//        '/home/username/.ssh/id_rsa', 'secret')) {
-//        echo "Public Key Authentication Successful\n";
-//      } else {
-//        die('Public Key Authentication Failed');
-//      }
-    }
-    else {
-      // Otherwise fall back to the good old shell escape
-    }
-
+    $rsync = "rsync -avPh --exclude 'sites/*/files' --exclude '.git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
+    var_dump($rsync);
+    // TODO use verbose flags in rsync only if v set in opts
+    // TODO create flag to compress the backup to a tar.gz archive
+    $output->writeln(passthru($rsync));
 
   }
 
   private function generateBackupPath() {
     global $configs;
-    $dir = "{$configs->local}/$this->server/{$this->docroot}/{$this->env}";
-
-
+    $dir = "{$configs->local}/{$this->server['machine']}/{$this->docroot['machine']}/{$this->env}";
 
     // TODO use File::checkDirectory
     if (!file_exists($dir)) { // TODO include force parameter
