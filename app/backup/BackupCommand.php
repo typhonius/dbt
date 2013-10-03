@@ -82,7 +82,6 @@ class BackupCommand extends Command {
     foreach ($this->servers as $server) {
       foreach ($this->docroots as $docroot) {
         foreach ($this->envs as $env) {
-          // TODO have to actually make sure the docroot and env exist on the server.
           if ($this->config->isValidConfig($docroot, $server, $env)) {
             $this->docroot = $this->config->getDocrootConfig($docroot);
             $this->server = $this->config->getServerConfig($server);
@@ -104,27 +103,20 @@ class BackupCommand extends Command {
     $this->backup_path = $this->generateBackupPath();
     $this->generateBackupDirs();
     if ($this->download != 'files') {
-      $rsync = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
-      // TODO create flag to compress the backup to a tar.gz archive
-      if ($this->verbosity) {
-        //$output->writeln(passthru($rsync));
-        passthru($rsync);
-      }
-      else {
-        exec($rsync);
-      }
+      $rsync[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
     }
     if ($this->download != 'code') {
       // Exclude the most common directories from the rsync to ensure we're as close as possible to just sites/*/files
-      $rsync = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+      $rsync[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+    }
+    foreach ($rsync as $r) {
       // TODO create flag to compress the backup to a tar.gz archive
-      // TODO add in config to just do code OR files
       if ($this->verbosity) {
         //$output->writeln(passthru($rsync));
-        passthru($rsync);
+        passthru($r);
       }
       else {
-        exec($rsync);
+        exec($r);
       }
     }
 
