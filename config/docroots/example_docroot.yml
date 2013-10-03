@@ -1,0 +1,9 @@
+name: "My Example Site"
+machine: "example_docroot"
+environments:
+  prod:
+    server: "example_server"
+    path: "/var/www/html/example_docroot/docroot"
+  test:
+    server: "example_server_two"
+    path: "/var/www/html/example_docroot/docroot"

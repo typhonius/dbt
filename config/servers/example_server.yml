@@ -1,0 +1,6 @@
+name: Example Server
+machine: example_server
+domain: foo.example.com
+user: ex
+port: 15671
+sshuser: example
