@@ -31,6 +31,7 @@ class BackupCommand extends Command {
   private $docroot;
   private $server;
   private $env;
+  private $verbosity;
 
   public function __construct() {
     parent::__construct();
@@ -60,6 +61,7 @@ class BackupCommand extends Command {
     $this->servers = $input->getOption('servers');
     $this->docroots = $input->getOption('docroots');
     $this->envs = $input->getOption('envs');
+    $this->verbosity = $input->getOption('verbose');
 
     if ($this->servers[0] == 'all') {
       $this->servers = $this->loadFromConfig('servers');
@@ -98,11 +100,18 @@ class BackupCommand extends Command {
     $this->backup_path = $this->generateBackupPath();
     //$output->writeln("<info>Generating backup paths</info>");
     $this->generateBackupDirs();
-    $rsync = "rsync -avPh --exclude 'sites/*/files' --exclude '.git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
+    $rsync = "rsync -aPh --exclude 'sites/*/files' --exclude '.git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
     var_dump($rsync);
     // TODO use verbose flags in rsync only if v set in opts
     // TODO create flag to compress the backup to a tar.gz archive
-    $output->writeln(passthru($rsync));
+    // TODO add in config to just do code OR files
+    if ($this->verbosity) {
+      //$output->writeln(passthru($rsync));
+      passthru($rsync);
+    }
+    else {
+      exec($rsync);
+    }
 
   }
 
