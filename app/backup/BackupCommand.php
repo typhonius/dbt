@@ -32,6 +32,7 @@ class BackupCommand extends Command {
   private $server;
   private $env;
   private $verbosity;
+  private $download;
 
   public function __construct() {
     parent::__construct();
@@ -48,7 +49,9 @@ class BackupCommand extends Command {
       ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots', array('all'))
       ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array('all'))
       ->addOption('show', null, InputOption::VALUE_NONE, 'Shows Docroots, Servers and Environments available')
-      ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.');
+      ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
+      ->addOption('code', null, InputOption::VALUE_NONE, 'Backup only downloads the code not any media files.')
+      ->addOption('files', null, InputOption::VALUE_NONE, 'Backup will only download media uploaded by the user to the site, not code.');
 
   }
 
@@ -62,6 +65,7 @@ class BackupCommand extends Command {
     $this->docroots = $input->getOption('docroots');
     $this->envs = $input->getOption('envs');
     $this->verbosity = $input->getOption('verbose');
+    $this->download = !($input->getOption('code') ^ $input->getOption('files')) ? 'both' : ($input->getOption('code') ? 'code' : 'files');
 
     if ($this->servers[0] == 'all') {
       $this->servers = $this->loadFromConfig('servers');
@@ -98,26 +102,37 @@ class BackupCommand extends Command {
 
   private function runBackup(OutputInterface $output) {
     $this->backup_path = $this->generateBackupPath();
-    //$output->writeln("<info>Generating backup paths</info>");
     $this->generateBackupDirs();
-    $rsync = "rsync -aPh --exclude 'sites/*/files' --exclude '.git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
-    var_dump($rsync);
-    // TODO use verbose flags in rsync only if v set in opts
-    // TODO create flag to compress the backup to a tar.gz archive
-    // TODO add in config to just do code OR files
-    if ($this->verbosity) {
-      //$output->writeln(passthru($rsync));
-      passthru($rsync);
+    if ($this->download != 'files') {
+      $rsync = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
+      // TODO create flag to compress the backup to a tar.gz archive
+      if ($this->verbosity) {
+        //$output->writeln(passthru($rsync));
+        passthru($rsync);
+      }
+      else {
+        exec($rsync);
+      }
     }
-    else {
-      exec($rsync);
+    if ($this->download != 'code') {
+      // Exclude the most common directories from the rsync to ensure we're as close as possible to just sites/*/files
+      $rsync = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+      // TODO create flag to compress the backup to a tar.gz archive
+      // TODO add in config to just do code OR files
+      if ($this->verbosity) {
+        //$output->writeln(passthru($rsync));
+        passthru($rsync);
+      }
+      else {
+        exec($rsync);
+      }
     }
 
   }
 
   private function generateBackupPath() {
     global $configs;
-    $dir = "{$configs->local}/{$this->server['machine']}/{$this->docroot['machine']}/{$this->env}";
+    $dir = "{$configs->local}/{$this->docroot['machine']}/{$this->env}/{$this->server['machine']}";
 
     // TODO use File::checkDirectory
     if (!file_exists($dir)) { // TODO include force parameter
