@@ -22,7 +22,6 @@ $loader->add('utils', ROOT_DIR . '/app');
 
 // Load class Application and add our Classes
 $application = new Application();
+$application->setName('Drupal backup tool');
+$application->setVersion('1.0');
 $application->add(new BackupCommand());
-//$application->add(new ServerCommand());
-//$application->add(new DocrootCommand());
-
