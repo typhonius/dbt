@@ -28,7 +28,7 @@ class File {
     if (is_dir($path) && is_writeable($path)) {
       return TRUE;
     }
-    elseif (mkdir($path, 0755, TRUE)) {
+    elseif (@mkdir($path, 0755, TRUE)) {
       return TRUE;
     }
     return FALSE;
