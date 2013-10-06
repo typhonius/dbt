@@ -26,7 +26,6 @@ class BackupCommand extends Command {
   private $docroots;
   private $envs;
   private $backup_path;
-  private $backup_file;
   private $config;
   private $docroot;
   private $server;
@@ -139,35 +138,6 @@ class BackupCommand extends Command {
       @mkdir("{$this->backup_path}/" . CODEDIR, 0755, TRUE);
       @mkdir("{$this->backup_path}/" . FILEDIR, 0755, TRUE);
     }
-  }
-
-  private function generateFilesBackupDirName($docroot, $env) {
-    $dir = self::generateRootBackupDirName($docroot, $env) . "/" . FILEDIR;
-
-    if (!file_exists($dir)) {
-      @mkdir($dir, 0755, TRUE);
-    }
-
-    return $dir;
-  }
-
-  private function generateCodeBackupDirName($docroot, $env) {
-    $dir = self::generateRootBackupDirName($docroot, $env) . "/" . CODEDIR;
-
-    if (!file_exists($dir)) {
-      @mkdir($dir, 0755, TRUE);
-    }
-
-    return $dir;
-  }
-
-  private function generateBackupFileName() {
-    return "{$this->docroot}-{$this->env}-" . date('Y-m-d');
-  }
-
-  private function getBackupServer($docroot, $env) {
-    global $configs;
-    return $configs->docroots[$docroot]->data['environments'][$env]['server'];
   }
 
 }
