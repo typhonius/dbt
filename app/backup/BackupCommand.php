@@ -1,22 +1,12 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: adam.malone
- * Date: 20/9/13
- * Time: 12:02 59
- * To change this template use File | Settings | File Templates.
- */
 
 namespace backup;
-
-use utils\IncorrectSitenameException;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\ArrayInput;
 
 define('FILEDIR', 'files');
 define('CODEDIR', 'code');
@@ -43,7 +33,6 @@ class BackupCommand extends Command {
       ->setName("Backup")
       ->setHelp("Help will go here")
       ->setDescription('Backup all available docroots on all available servers.')
-      //->addArgument('docroots', InputArgument::OPTIONAL, 'Which docroots should be backed up?')
       ->addOption('envs', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array('all'))
       ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots', array('all'))
       ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array('all'))
@@ -101,6 +90,7 @@ class BackupCommand extends Command {
   private function runBackup(OutputInterface $output) {
     $this->backup_path = $this->generateBackupPath();
     $this->generateBackupDirs();
+    $rsync = array();
     if ($this->download != 'files') {
       $rsync[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
     }

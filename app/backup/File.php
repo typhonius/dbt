@@ -1,14 +1,6 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: adam.malone
- * Date: 21/9/13
- * Time: 03:44 50
- * To change this template use File | Settings | File Templates.
- */
 
 namespace backup;
-
 
 class File {
   public $files = array();
