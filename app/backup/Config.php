@@ -12,6 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 
 
 class Config {
+  public $local;
   public $servers;
   public $docroots;
 
@@ -20,6 +21,8 @@ class Config {
   }
 
   protected function loadConfig() {
+    $local = File::loadFiles(CONFIG, '/local.config.yml/');
+    $this->local = Yaml::parse($local[0]->uri);
     $servers = File::loadFiles(CONFIG . '/servers', '/.*\.yml/');
     $docroots = File::loadFiles(CONFIG . '/docroots', '/.*\.yml/');
 
@@ -78,9 +81,11 @@ class Config {
 
   public function getBackupLocation() {
     // TODO set backup location in config somewhere
-    $path = ROOT_DIR . '/backups';
-    if (File::checkDirectory($path)) {
-      return $path;
+    if (File::checkDirectory($this->local)) {
+      return $this->local;
+    }
+    elseif (File::checkDirectory(ROOT_DIR . "backups")) {
+      return ROOT_DIR . "backups";
     }
     else {
       return '/tmp';
