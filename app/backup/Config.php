@@ -73,12 +73,11 @@ class Config {
   }
 
   public function getBackupLocation() {
-    // TODO set backup location in config somewhere
-    if (File::checkDirectory($this->local)) {
-      return $this->local;
+    if (File::checkDirectory($this->local['backup'])) {
+      return $this->local['backup'];
     }
-    elseif (File::checkDirectory(ROOT_DIR . "backups")) {
-      return ROOT_DIR . "backups";
+    elseif (File::checkDirectory(ROOT_DIR . "/backups")) {
+      return ROOT_DIR . "/backups";
     }
     else {
       return '/tmp';

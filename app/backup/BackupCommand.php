@@ -88,8 +88,8 @@ class BackupCommand extends Command {
   }
 
   private function runBackup(OutputInterface $output) {
-    $this->backup_path = $this->generateBackupPath();
-    $this->generateBackupDirs();
+    $this->generateBackupPath();
+
     $rsync = array();
     if ($this->download != 'files') {
       $rsync[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
@@ -112,15 +112,15 @@ class BackupCommand extends Command {
   }
 
   private function generateBackupPath() {
-    global $configs;
-    $dir = "{$configs->local}/{$this->docroot['machine']}/{$this->env}/{$this->server['machine']}";
-
-    // TODO use File::checkDirectory
-    if (!file_exists($dir)) { // TODO include force parameter
-      @mkdir($dir, 0755, TRUE);
+    $backup = $this->config->getBackupLocation();
+    $dir = "{$backup}/{$this->docroot['machine']}/{$this->env}/{$this->server['machine']}";
+    if (File::checkDirectory($dir)) {
+      $this->backup_path = $dir;
+      $this->generateBackupDirs();
     }
-
-    return $dir;
+    else {
+      // error
+    }
   }
 
   private function generateBackupDirs() {
