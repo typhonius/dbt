@@ -2,12 +2,15 @@
 
 use Symfony\Component\Console\Application;
 use backup\BackupCommand;
+use backup\Config;
 
 define('ROOT_DIR', dirname(dirname(__FILE__)));
 define('CONFIG', ROOT_DIR . '/config');
 
 global $configs;
 $configs->local = 'backups';
+
+$config = new LocalConfig();
 
 // Load class autoloader
 $loader = require_once ROOT_DIR . '/vendor/autoload.php';

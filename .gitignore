@@ -1,3 +1,4 @@
 backups
 config/docroots/*
 config/servers/*
+config/local/*

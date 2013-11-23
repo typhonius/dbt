@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 define('FILEDIR', 'files');
 define('CODEDIR', 'code');
+define('DBDIR', 'db');
 
 class BackupCommand extends Command {
   private $servers;
@@ -25,7 +26,7 @@ class BackupCommand extends Command {
 
   public function __construct() {
     parent::__construct();
-    $this->config = new Config();
+    $this->config = new LocalConfig();
   }
 
   protected function configure() {
@@ -38,8 +39,7 @@ class BackupCommand extends Command {
       ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array('all'))
       ->addOption('show', null, InputOption::VALUE_NONE, 'Shows Docroots, Servers and Environments available')
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
-      ->addOption('code', null, InputOption::VALUE_NONE, 'Backup only downloads the code not any media files.')
-      ->addOption('files', null, InputOption::VALUE_NONE, 'Backup will only download media uploaded by the user to the site, not code.');
+      ->addOption('download', 'dl', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array('all'));
 
   }
 
@@ -53,7 +53,8 @@ class BackupCommand extends Command {
     $this->docroots = $input->getOption('docroots');
     $this->envs = $input->getOption('envs');
     $this->verbosity = $input->getOption('verbose');
-    $this->download = !($input->getOption('code') ^ $input->getOption('files')) ? 'both' : ($input->getOption('code') ? 'code' : 'files');
+    $this->download = $input->getOption('download');
+    //var_dump($this->download);
 
     if ($this->servers[0] == 'all') {
       $this->servers = $this->loadFromConfig('servers');
@@ -90,22 +91,30 @@ class BackupCommand extends Command {
   private function runBackup(OutputInterface $output) {
     $this->generateBackupPath();
 
-    $rsync = array();
-    if ($this->download != 'files') {
-      $rsync[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
+    $command = array();
+    // TODO put in host, port etc also instantiate $this server with port 22 as default.
+    if (!$this->download || in_array('files', $this->download)) {
+      $command[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
     }
-    if ($this->download != 'code') {
+    if (!$this->download || in_array('code', $this->download)) {
       // Exclude the most common directories from the rsync to ensure we're as close as possible to just sites/*/files
-      $rsync[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+      $command[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
     }
-    foreach ($rsync as $r) {
+    if (!$this->download || in_array('db', $this->download)) {
+      $command[] = "ssh -t {$this->server['sshuser']} 'cd {$this->docroot['environments'][$this->env]['path']} ; bash'";
+      //$command[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+    }
+    //if ($this->download) // db
+    // ssh hermes "cd /var/www/html/adammalone/docroot && drush sql-dump | gzip -c | cat > /tmp/adammalone.sql.gz"
+    foreach ($command as $c) {
       // TODO create flag to compress the backup to a tar.gz archive
       if ($this->verbosity) {
         //$output->writeln(passthru($rsync));
-        passthru($r);
+        //passthru($c);
       }
       else {
-        exec($r);
+        //var_dump($c);
+        //exec($c);
       }
     }
 
@@ -119,6 +128,7 @@ class BackupCommand extends Command {
       $this->generateBackupDirs();
     }
     else {
+     // throw new IncorrectSitenameException
       // error
     }
   }
@@ -127,6 +137,7 @@ class BackupCommand extends Command {
     if (file_exists($this->backup_path)) {
       @mkdir("{$this->backup_path}/" . CODEDIR, 0755, TRUE);
       @mkdir("{$this->backup_path}/" . FILEDIR, 0755, TRUE);
+      @mkdir("{$this->backup_path}/" . DBDIR, 0755, TRUE);
     }
   }
 
