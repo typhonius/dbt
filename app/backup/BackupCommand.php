@@ -25,8 +25,11 @@ class BackupCommand extends Command {
   private $download;
 
   public function __construct() {
+    global $configs;
     parent::__construct();
-    $this->config = new LocalConfig();
+
+    $class = "config\\" . $configs["class"];
+    $this->config = new $class;
   }
 
   protected function configure() {
