@@ -1,10 +1,10 @@
 <?php
 
-namespace backup;
+namespace config;
 use Symfony\Component\Yaml\Yaml;
 
 
-class S3Config extends RemoteConfig implements Config {
+class S3Config extends ConfigBase {
   public $local;
   public $servers;
   public $docroots;

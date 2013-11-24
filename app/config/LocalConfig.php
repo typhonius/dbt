@@ -1,10 +1,11 @@
 <?php
 
-namespace backup;
+namespace config;
 use Symfony\Component\Yaml\Yaml;
+use backup\File;
 
 
-class LocalConfig extends RemoteConfig implements Config {
+class LocalConfig extends ConfigBase {
   public $local;
   public $servers;
   public $docroots;
