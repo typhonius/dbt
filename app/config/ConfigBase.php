@@ -2,7 +2,7 @@
 
 namespace backup;
 
-interface Config {
+interface ConfigBase {
 
   public function __construct();
 

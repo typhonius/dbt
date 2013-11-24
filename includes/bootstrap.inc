@@ -1,21 +1,23 @@
 <?php
 
 use Symfony\Component\Console\Application;
+Use Symfony\Component\Yaml\Yaml;
 use backup\BackupCommand;
-use backup\LocalConfig;
+use utils\ConfigFileNotFoundException;
 
-define('ROOT_DIR', dirname(dirname(__FILE__)));
 define('CONFIG', ROOT_DIR . '/config');
 
 global $configs;
-$configs->local = 'backups';
 
-// Load class autoloader
-$loader = require_once ROOT_DIR . '/vendor/autoload.php';
-$loader->add('backup', ROOT_DIR . '/app');
-$loader->add('utils', ROOT_DIR . '/app');
-
-$config = new LocalConfig();
+try {
+  if (!file_exists(CONFIG . '/local/local.config.yml')) {
+    throw new ConfigFileNotFoundException('Local config file not found.');
+  }
+  $configs = Yaml::parse(CONFIG . '/local/local.config.yml');
+}
+catch (Exception $e) {
+  exit($e->getMessage() . "\n");
+}
 
 // Load class Application and add our Classes
 $application = new Application();
