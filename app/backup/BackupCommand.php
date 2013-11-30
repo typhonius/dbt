@@ -95,7 +95,7 @@ class BackupCommand extends Command {
     $this->generateBackupPath();
 
     $command = array();
-    // TODO put in host, port etc also instantiate $this server with port 22 as default.
+    // TODO put in host, port etc also instantiate $this server with port 22 as default and localhost as default host.
     if (!$this->download || in_array('files', $this->download)) {
       $command[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
     }
@@ -104,20 +104,30 @@ class BackupCommand extends Command {
       $command[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
     }
     if (!$this->download || in_array('db', $this->download)) {
-      $command[] = "ssh -t {$this->server['sshuser']} 'cd {$this->docroot['environments'][$this->env]['path']} ; bash'";
-      //$command[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+      // Get the DB credentials
+      $exec = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->docroot['environments'][$this->env]['uri']}\"; define(\"DRUPAL_ROOT\", \"{$this->docroot['environments'][$this->env]['path']}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION); global \$databases; print serialize(\$databases);'";
+
+      $connection = ssh2_connect($this->server['hostname'], $this->server['port']);
+      ssh2_auth_pubkey_file($connection, $this->server['user'], $this->server['key'] . '.pub', $this->server['key']);
+
+      $stream = ssh2_exec($connection, $exec);
+      stream_set_blocking($stream, true);
+      $stream_out = ssh2_fetch_stream($stream, SSH2_STREAM_STDIO);
+      $database = unserialize(stream_get_contents($stream_out));
+
+      $credentials = &$database['default']['default'];
+      // TODO add hostname and port for non-local remote MySQL installations.
+      $dump_command = "mysqldump -u{$credentials['username']} -p{$credentials['password']} {$credentials['database']}";
+      $command[] = "ssh -p{$this->server['port']} {$this->server['user']}@{$this->server['hostname']} '{$dump_command} | gzip -c' > {$this->backup_path}/" . DBDIR . "/{$this->docroot['machine']}.sql.gz";
     }
-    //if ($this->download) // db
-    // ssh hermes "cd /var/www/html/adammalone/docroot && drush sql-dump | gzip -c | cat > /tmp/adammalone.sql.gz"
     foreach ($command as $c) {
-      // TODO create flag to compress the backup to a tar.gz archive
       if ($this->verbosity) {
         //$output->writeln(passthru($rsync));
         //passthru($c);
       }
       else {
         //var_dump($c);
-        //exec($c);
+        exec($c);
       }
     }
 

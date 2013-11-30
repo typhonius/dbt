@@ -3,4 +3,5 @@ machine: example_server
 domain: foo.example.com
 user: ex
 port: 15671
+key: /Users/example/.ssh/id_rsa
 sshuser: example

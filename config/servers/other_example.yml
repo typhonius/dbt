@@ -3,4 +3,5 @@ machine: example_server_two
 domain: bar.example.com
 user: ex
 port: 15671
+key: /home/afk/.ssh/id_dsa
 sshuser: example2

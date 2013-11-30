@@ -4,6 +4,8 @@ environments:
   prod:
     server: "example_server"
     path: "/var/www/html/example_docroot/docroot"
+    uri: "example.com"
   test:
     server: "example_server_two"
     path: "/var/www/html/example_docroot/docroot"
+    uri: "dev.example.com"

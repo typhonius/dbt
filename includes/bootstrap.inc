@@ -10,6 +10,9 @@ define('CONFIG', ROOT_DIR . '/config');
 global $configs;
 
 try {
+  if (!extension_loaded('ssh2')) {
+    throw new Exception('ssh2 not installed.');
+  }
   if (!file_exists(CONFIG . '/local/local.config.yml')) {
     throw new ConfigFileNotFoundException('Local config file not found.');
   }
