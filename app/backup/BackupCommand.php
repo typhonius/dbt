@@ -117,7 +117,8 @@ class BackupCommand extends Command {
 
       $credentials = &$database['default']['default'];
       // TODO add hostname and port for non-local remote MySQL installations.
-      $dump_command = "mysqldump -u{$credentials['username']} -p{$credentials['password']} {$credentials['database']}";
+      $dump_command = escapeshellcmd("mysqldump '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
+      var_dump($dump_command);
       $command[] = "ssh -p{$this->server['port']} {$this->server['user']}@{$this->server['hostname']} '{$dump_command} | gzip -c' > {$this->backup_path}/" . DBDIR . "/{$this->docroot['machine']}.sql.gz";
     }
     foreach ($command as $c) {
