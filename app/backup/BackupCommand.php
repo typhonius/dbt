@@ -42,7 +42,7 @@ class BackupCommand extends Command {
       ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array('all'))
       ->addOption('show', null, InputOption::VALUE_NONE, 'Shows Docroots, Servers and Environments available')
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
-      ->addOption('download', 'dl', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array('all'));
+      ->addOption('download', 'dl', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array());
 
   }
 
@@ -57,7 +57,6 @@ class BackupCommand extends Command {
     $this->envs = $input->getOption('envs');
     $this->verbosity = $input->getOption('verbose');
     $this->download = $input->getOption('download');
-    //var_dump($this->download);
 
     if ($this->servers[0] == 'all') {
       $this->servers = $this->loadFromConfig('servers');
@@ -95,30 +94,30 @@ class BackupCommand extends Command {
     $this->generateBackupPath();
 
     $command = array();
+
+    // The user may set defaults in the site yaml file. These may be overwritten
+    // using the command line --download option. If neither are set we default
+    // to download everything.
+    $downloads = isset($this->docroot['environments'][$this->env]['download']) ? $this->docroot['environments'][$this->env]['download'] : array();
+
+    $downloads = !empty($this->download) ? $this->download : $downloads;
+
+    $downloads = empty($downloads) ? array('files', 'code', 'db') : $downloads;
+
     // TODO put in host, port etc also instantiate $this server with port 22 as default and localhost as default host.
-    if (!$this->download || in_array('files', $this->download)) {
-      $command[] = "rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']} {$this->backup_path}/" . CODEDIR;
+    if (in_array('files', $downloads)) {
+      $public_files = $this->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES',  "print variable_get(\"file_public_path\", \"sites/default/files\");");
+      $command[] = escapeshellcmd("rsync -aPh -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/{$public_files} {$this->backup_path}/" . CODEDIR);
     }
-    if (!$this->download || in_array('code', $this->download)) {
-      // Exclude the most common directories from the rsync to ensure we're as close as possible to just sites/*/files
-      $command[] = "rsync -aPh -f '- all' -f '- */modules' -f '- */themes' -f '- */libraries' -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/sites {$this->backup_path}/" . FILEDIR;
+    if (in_array('code', $downloads)) {
+      $command[] = escapeshellcmd("rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/ {$this->backup_path}/" . FILEDIR);
     }
-    if (!$this->download || in_array('db', $this->download)) {
+    if (in_array('db', $downloads)) {
       // Get the DB credentials
-      $exec = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->docroot['environments'][$this->env]['uri']}\"; define(\"DRUPAL_ROOT\", \"{$this->docroot['environments'][$this->env]['path']}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION); global \$databases; print serialize(\$databases);'";
-
-      $connection = ssh2_connect($this->server['hostname'], $this->server['port']);
-      ssh2_auth_pubkey_file($connection, $this->server['user'], $this->server['key'] . '.pub', $this->server['key']);
-
-      $stream = ssh2_exec($connection, $exec);
-      stream_set_blocking($stream, true);
-      $stream_out = ssh2_fetch_stream($stream, SSH2_STREAM_STDIO);
-      $database = unserialize(stream_get_contents($stream_out));
-
-      $credentials = &$database['default']['default'];
-      // TODO add hostname and port for non-local remote MySQL installations.
+      $databases = unserialize($this->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
+      $credentials = &$databases['default']['default'];
+      // TODO add hostname and port for non-local remote MySQL installations. -h -P
       $dump_command = escapeshellcmd("mysqldump '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
-      var_dump($dump_command);
       $command[] = "ssh -p{$this->server['port']} {$this->server['user']}@{$this->server['hostname']} '{$dump_command} | gzip -c' > {$this->backup_path}/" . DBDIR . "/{$this->docroot['machine']}.sql.gz";
     }
     foreach ($command as $c) {
@@ -127,11 +126,26 @@ class BackupCommand extends Command {
         //passthru($c);
       }
       else {
-        //var_dump($c);
-        exec($c);
+        //exec($c);
       }
     }
+  }
 
+  /**
+   * Executes a command remotely after bootstrapping Drupal to the requested level.
+   *
+   * @param string $bootstrap
+   * @param string $command
+   * @return string
+   */
+  private function execRemoteCommand($bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
+    $remote_command = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->docroot['environments'][$this->env]['uri']}\"; define(\"DRUPAL_ROOT\", \"{$this->docroot['environments'][$this->env]['path']}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
+    $connection = ssh2_connect($this->server['hostname'], $this->server['port']);
+    ssh2_auth_pubkey_file($connection, $this->server['user'], $this->server['key'] . '.pub', $this->server['key']);
+    $stream = ssh2_exec($connection, $remote_command);
+    stream_set_blocking($stream, true);
+    $stream_out = ssh2_fetch_stream($stream, SSH2_STREAM_STDIO);
+    return stream_get_contents($stream_out);
   }
 
   private function generateBackupPath() {
