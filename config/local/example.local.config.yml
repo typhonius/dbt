@@ -1,1 +1,2 @@
-backup: '/Users/adam.malone/backups'
+backup: 'backups'
+class: 'LocalConfig'
