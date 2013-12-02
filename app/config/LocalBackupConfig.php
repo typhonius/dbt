@@ -7,12 +7,6 @@ use backup\File;
 
 class LocalConfig extends ConfigBase {
   public $local;
-  public $servers;
-  public $docroots;
-
-  public function __construct() {
-    self::loadConfig();
-  }
 
   public function loadConfig() {
     $local = File::loadFiles(CONFIG, '/local.config.yml/');
