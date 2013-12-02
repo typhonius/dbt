@@ -1,6 +1,6 @@
 <?php
 
-namespace backup;
+namespace utils;
 
 class File {
   public $files = array();
