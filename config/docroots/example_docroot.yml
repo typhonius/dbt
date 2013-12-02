@@ -6,6 +6,6 @@ environments:
     path: "/var/www/html/example_docroot/docroot"
     uri: "example.com"
   test:
-    server: "example_server_two"
+    server: "other_example"
     path: "/var/www/html/example_docroot/docroot"
     uri: "dev.example.com"
