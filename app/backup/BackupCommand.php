@@ -7,15 +7,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use utils\DrupalSite;
 
 define('FILEDIR', 'files');
 define('CODEDIR', 'code');
 define('DBDIR', 'db');
 
 class BackupCommand extends Command {
-  private $servers;
-  private $docroots;
-  private $envs;
   private $backup_path;
   private $config;
   private $docroot;
@@ -25,96 +23,69 @@ class BackupCommand extends Command {
   private $download;
 
   public function __construct() {
-    global $configs;
     parent::__construct();
-
-    $class = "config\\" . $configs["class"];
-    $this->config = new $class;
   }
 
   protected function configure() {
     $this
       ->setName("Backup")
-      ->setHelp("Help will go here")
+      ->setHelp("Help will go here") // TODO Maybe use a function to return help.
       ->setDescription('Backup all available docroots on all available servers.')
-      ->addOption('envs', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array('all'))
-      ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots', array('all'))
-      ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array('all'))
-      ->addOption('show', null, InputOption::VALUE_NONE, 'Shows Docroots, Servers and Environments available')
+      ->addOption('envs', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array())
+      ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots', array())
+      ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array())
+      ->addOption('show', null, InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments available')
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
       ->addOption('download', 'dl', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array());
 
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
+    global $configs;
+
+    $class = "config\\" . $configs["class"];
+
     if ($input->getOption('show')) {
-      $output->writeln('<info>foo</info>');
+      $all = new $class(array(), array(), array());
+      $output->writeln('<info>Information about all resources will go here.</info>');
       return;
     }
 
-    $this->servers = $input->getOption('servers');
-    $this->docroots = $input->getOption('docroots');
-    $this->envs = $input->getOption('envs');
+    $this->config = new $class($input->getOption('servers'), $input->getOption('docroots'), $input->getOption('envs'));
     $this->verbosity = $input->getOption('verbose');
     $this->download = $input->getOption('download');
 
-    if ($this->servers[0] == 'all') {
-      $this->servers = $this->loadFromConfig('servers');
+    foreach ($this->config->envs as $env) {
+      $site = new DrupalSite($this->config, $env);
+      $this->runBackup($output, $site);
     }
-    if ($this->docroots[0] == 'all') {
-      $this->docroots = $this->loadFromConfig('docroots');
-    }
-    if ($this->envs[0] == 'all') {
-      // TODO parameterise this
-      $this->envs = array('local', 'dev', 'test', 'stage', 'prod');
-    }
-
-    // Nesty nest
-    foreach ($this->servers as $server) {
-      foreach ($this->docroots as $docroot) {
-        foreach ($this->envs as $env) {
-          if ($this->config->isValidConfig($docroot, $server, $env)) {
-            $this->docroot = $this->config->getDocrootConfig($docroot);
-            $this->server = $this->config->getServerConfig($server);
-            $this->env = $env;
-            $output->writeln("<info>Running backup of $docroot, $env from $server</info>");
-            $this->runBackup($output);
-          }
-        }
-      }
-    }
-
   }
 
-  private function loadFromConfig($stage) {
-    return $this->config->returnInfoArray($stage, 'machine');
-  }
+  private function runBackup(OutputInterface $output, DrupalSite $site) {
 
-  private function runBackup(OutputInterface $output) {
-    $this->generateBackupPath();
+    // TODO this should be part of config
+    //$this->config->
+    //$this->generateBackupPath();
 
-    $command = array();
+
 
     // The user may set defaults in the site yaml file. These may be overwritten
     // using the command line --download option. If neither are set we default
     // to download everything.
-    $downloads = isset($this->docroot['environments'][$this->env]['download']) ? $this->docroot['environments'][$this->env]['download'] : array();
+    $download = $this->getDownloadOptions($this->download, $site->backup);
 
-    $downloads = !empty($this->download) ? $this->download : $downloads;
+    $command = array();
 
-    $downloads = empty($downloads) ? array('files', 'code', 'db') : $downloads;
-
-    // TODO put in host, port etc also instantiate $this server with port 22 as default and localhost as default host.
-    if (in_array('files', $downloads)) {
-      $public_files = $this->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES',  "print variable_get(\"file_public_path\", \"sites/default/files\");");
+    if (in_array('files', $download)) {
+      $public_files = $site->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES',  "print variable_get(\"file_public_path\", \"sites/default/files\");");
       $command[] = escapeshellcmd("rsync -aPh -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/{$public_files} {$this->backup_path}/" . CODEDIR);
     }
-    if (in_array('code', $downloads)) {
+    if (in_array('code', $download)) {
       $command[] = escapeshellcmd("rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/ {$this->backup_path}/" . FILEDIR);
     }
-    if (in_array('db', $downloads)) {
+    if (in_array('db', $download)) {
       // Get the DB credentials
-      $databases = unserialize($this->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
+      $databases = unserialize($site->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
       $credentials = &$databases['default']['default'];
       // TODO add hostname and port for non-local remote MySQL installations. -h -P
       $dump_command = escapeshellcmd("mysqldump '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
@@ -159,6 +130,14 @@ class BackupCommand extends Command {
      // throw new IncorrectSitenameException
       // error
     }
+  }
+
+  private function getDownloadOptions($cli, $conf) {
+    $downloads = isset($conf['download']) ? $conf['download'] : array();
+    $downloads = !empty($cli) ? $cli : $downloads;
+    $downloads = empty($downloads) ? array('files', 'code', 'db') : $downloads;
+
+    return $downloads;
   }
 
   private function generateBackupDirs() {

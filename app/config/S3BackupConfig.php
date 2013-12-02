@@ -4,7 +4,7 @@ namespace config;
 use Symfony\Component\Yaml\Yaml;
 
 
-class S3Config extends ConfigBase {
+class S3Config extends RemoteConfig {
   public $local;
   public $servers;
   public $docroots;

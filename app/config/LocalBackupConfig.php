@@ -5,35 +5,13 @@ use Symfony\Component\Yaml\Yaml;
 use backup\File;
 
 
-class LocalConfig extends ConfigBase {
+class LocalBackupConfig extends ConfigBase {
   public $local;
 
-  public function loadConfig() {
-    $local = File::loadFiles(CONFIG, '/local.config.yml/');
-    $this->local = Yaml::parse($local[0]->uri);
-    $servers = File::loadFiles(CONFIG . '/servers', '/.*\.yml/');
-    $docroots = File::loadFiles(CONFIG . '/docroots', '/.*\.yml/');
-
-    // TODO ensure some are loaded else error
-    // TODO Create server with port 22 as default
-
-    foreach ($servers as &$server) {
-      $server->data = Yaml::parse($server->uri);
-      $this->servers[$server->data['machine']] = $server;
-    }
-    foreach ($docroots as &$docroot) {
-      $docroot->data = Yaml::parse($docroot->uri);
-      $this->docroots[$docroot->data['machine']] = $docroot;
-    }
-  }
 
   public function getConfigByKey($stage, $key) {
     // TODO return all server info perhaps? Or all docroot info - this would be useful for SCPing stuff
     // Might be better to use getServerConfig below to get the server config...
-  }
-
-  public function getServerConfig($server) {
-    return $this->servers[$server]->data;
   }
 
   public function getDocrootConfig($docroot) {
@@ -68,6 +46,10 @@ class LocalConfig extends ConfigBase {
       $docroots[] = $docroot->data['name'];
     }
     return $docroots;
+  }
+
+  public function generateBackupLocation(DrupalSite $site) {
+
   }
 
   public function getBackupLocation() {
