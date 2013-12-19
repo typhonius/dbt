@@ -56,7 +56,8 @@ class BackupCommand extends Command {
     $this->download = $input->getOption('download');
 
     foreach ($this->config->envs as $env) {
-      $site = new DrupalSite($this->config, $env);
+      $env['server'] = $this->config->getServerConfig($env['env']['server']);
+      $site = new DrupalSite($env);
       $this->runBackup($output, $site);
     }
   }

@@ -28,7 +28,7 @@ abstract class ConfigBase {
         $this->docroots[$docroot->data['machine']] = $docroot;
         foreach ($docroot->data['environments'] as $environment => $env_data) {
           if (empty($envs) || in_array($environment, $envs)) {
-            $this->envs["{$docroot->data['machine']}.{$environment}"] = $env_data;
+            $this->envs["{$docroot->data['machine']}.{$environment}"]['env'] = $env_data;
           }
         }
       }
@@ -46,11 +46,10 @@ abstract class ConfigBase {
     return array();
   }
 
-  public function getConfigByKey($stage, $key) {}
-
   public function getServerConfig($server) {
+
     if (isset($this->servers[$server])) {
-      return $this->servers[$server];
+      return $this->servers[$server]->data;
     }
     else {
       $config = File::loadFiles(CONFIG . '/servers', '/' . $server . '\.yml/');
@@ -61,7 +60,7 @@ abstract class ConfigBase {
       $this->servers[$server] = $server_config;
     }
 
-    return $this->servers[$server];
+    return $this->servers[$server]->data;
   }
 
   public function serverDefaults() {
@@ -74,6 +73,8 @@ abstract class ConfigBase {
   }
 
   public function getDocrootConfig($docroot) {}
+
+  public function getEnvironmentConfig($env) {}
 
   public function returnInfoArray($stage, $param) {}
 
