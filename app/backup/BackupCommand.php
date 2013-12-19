@@ -68,8 +68,6 @@ class BackupCommand extends Command {
     //$this->config->
     //$this->generateBackupPath();
 
-
-
     // The user may set defaults in the site yaml file. These may be overwritten
     // using the command line --download option. If neither are set we default
     // to download everything.
@@ -88,8 +86,14 @@ class BackupCommand extends Command {
       // Get the DB credentials
       $databases = unserialize($site->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
       $credentials = &$databases['default']['default'];
-      // TODO add hostname and port for non-local remote MySQL installations. -h -P
-      $dump_command = escapeshellcmd("mysqldump '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
+
+      if ($credentials['driver'] == 'mysql') {
+        $credentials['port'] = $credentials['port'] ?: 3306;
+        $dump_command = escapeshellcmd("mysqldump '-h{$credentials['host']}' '-P{$credentials['port']}' '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
+      }
+      else {
+        throw new \Exception;
+      }
       $command[] = "ssh -p{$this->server['port']} {$this->server['user']}@{$this->server['hostname']} '{$dump_command} | gzip -c' > {$this->backup_path}/" . DBDIR . "/{$this->docroot['machine']}.sql.gz";
     }
     foreach ($command as $c) {
