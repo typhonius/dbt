@@ -1,6 +1,7 @@
 <?php
 
-namespace config;
+namespace BackupOop\Config;
+
 use Symfony\Component\Yaml\Yaml;
 
 

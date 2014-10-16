@@ -1,15 +1,18 @@
 <?php
 
-namespace config;
+namespace BackupOop\Config;
 
-use utils\File;
+use BackupOop\Utils\File;
 use Symfony\Component\Yaml\Yaml;
+use BackupOop\Utils\DrupalSite;
 
-abstract class ConfigBase {
+abstract class ConfigBase implements ConfigInterface {
 
   protected $servers;
   protected $docroots;
-  protected $envs;
+  protected $environments;
+
+  protected $sites;
 
   // TODO, this should have all general things to do with loading config
   // and backing up to where. The classes extending this should just alter
@@ -18,21 +21,55 @@ abstract class ConfigBase {
   //TODO consider not loading servers here and only loading them when needed
   // TODO split loading servers / docroots into own functions called fomr __construct
 
-  public function __construct($servers, $docroots, $envs) {
+  public function __construct($servers, $docroots, $environments) {
+    $this->servers = $servers;
+    $this->docroots = $docroots;
+    $this->environments = $environments;
+    $this->filterSites();
+  }
 
-    $docroot_files = File::loadFiles(CONFIG . '/docroots', '/.*\.yml/');
+  public function getSites() {
+    return $this->sites;
+  }
 
-    foreach ($docroot_files as &$docroot) {
-      $docroot->data = Yaml::parse($docroot->uri);
-      if (empty($docroots) || in_array($docroot->data['machine'], $docroots)) {
-        $this->docroots[$docroot->data['machine']] = $docroot;
-        foreach ($docroot->data['environments'] as $environment => $env_data) {
-          if (empty($envs) || in_array($environment, $envs)) {
-            $this->envs["{$docroot->data['machine']}.{$environment}"]['env'] = $env_data;
-          }
+  public function filterSites() {
+    $docroot_info = $this->getDocroots();
+    $server_info = $this->getServers();
+
+    foreach ($docroot_info as &$docroot) {
+      foreach ($docroot['environments'] as $env_id => &$environment) {
+        if (isset($server_info[$environment['server']]) && empty($this->environments) || in_array($env_id, $this->environments)) {
+          $server = $server_info[$environment['server']];
+          $environment['docroot'] = $docroot['machine'];
+          $environment['machine'] = $env_id;
+          $this->sites[] = new DrupalSite($server, $environment);
         }
       }
     }
+  }
+
+  protected function getDocroots() {
+    $docroots = [];
+    foreach (File::loadFiles(CONFIG . '/docroots', '/.*\.yml/') as $docroot_conf) {
+      $docroot = Yaml::parse($docroot_conf->uri);
+      if (empty($this->docroots) || in_array($docroot['machine'], $this->docroots)) {
+        $docroots[$docroot['machine']] = $docroot;
+      }
+    }
+
+    return $docroots;
+  }
+
+  protected function getServers() {
+    $servers = [];
+    foreach (File::loadFiles(CONFIG . '/servers', '/.*\.yml/') as $server_conf) {
+      $server = Yaml::parse($server_conf->uri);
+      if (empty($this->servers) || in_array($server['machine'], $this->servers)) {
+        $servers[$server['machine']] = $server + $this->serverDefaults();
+      }
+    }
+
+    return $servers;
   }
 
   /**
@@ -46,23 +83,6 @@ abstract class ConfigBase {
     return array();
   }
 
-  public function getServerConfig($server) {
-
-    if (isset($this->servers[$server])) {
-      return $this->servers[$server]->data;
-    }
-    else {
-      $config = File::loadFiles(CONFIG . '/servers', '/' . $server . '\.yml/');
-      // TODO sanity check to ensure server has been loaded otherwise exception
-      $server_config = $config[0];
-      $server_config->data = Yaml::parse($server_config->uri) + $this->serverDefaults();
-      // Merge defaults in
-      $this->servers[$server] = $server_config;
-    }
-
-    return $this->servers[$server]->data;
-  }
-
   public function serverDefaults() {
     return array (
       'hostname' => 'localhost',
@@ -72,18 +92,8 @@ abstract class ConfigBase {
     );
   }
 
-  public function getDocrootConfig($docroot) {}
+  public function getBackupLocation(DrupalSite $site, $component = NULL) {}
 
-  public function getEnvironmentConfig($env) {}
-
-  public function returnInfoArray($stage, $param) {}
-
-  public function isValidConfig($docroot, $server, $env) {}
-
-  public function generateBackupLocation(DrupalSite $site) {}
-
-  public function setBackupLocation() {}
-
-  public function getBackupLocation() {}
+  public function runPostBackupTasks() {}
 
 }

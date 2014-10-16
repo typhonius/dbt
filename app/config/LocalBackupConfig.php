@@ -1,66 +1,37 @@
 <?php
 
-namespace config;
-use Symfony\Component\Yaml\Yaml;
-use backup\File;
+namespace BackupOop\Config;
+
+use BackupOop\Utils\File;
+use BackupOop\Utils\DrupalSite;
 
 
 class LocalBackupConfig extends ConfigBase {
-  public $local;
 
+  public function getBackupLocation(DrupalSite $site, $component) {
+    global $configs;
 
-  public function getConfigByKey($stage, $key) {
-    // TODO return all server info perhaps? Or all docroot info - this would be useful for SCPing stuff
-    // Might be better to use getServerConfig below to get the server config...
-  }
+    $path = $site->getDocroot() . '/' . $site->getenvironment() . '/' . $site->getServer();
 
-  public function getDocrootConfig($docroot) {
-    return $this->docroots[$docroot]->data;
-  }
-
-  public function returnInfoArray($stage, $param) {
-    foreach ($this->$stage as $obj) {
-      $return[] = $obj->data[$param];
+    switch ($component) {
+      case 'code':
+        $path .= '/' . CODEDIR;
+        break;
+      case 'files':
+        $path .= '/' . FILEDIR;
+        break;
+      case 'db':
+        $path .= '/' . DBDIR;
+        break;
     }
-    return $return;
 
-    // TODO add in methods for server and docroot loading
-  }
-
-  public function isValidConfig($docroot, $server, $env) {
-    // First ensure the docroot machine name is in existence.
-    if ($this->docroots[$docroot]) {
-      // Now check that the environment exists for this docroot.
-      if (array_key_exists($env, $this->docroots[$docroot]->data['environments'])) {
-        // Finally ensure that the server passed to this function is in place on that environment.
-        if ($server == $this->docroots[$docroot]->data['environments'][$env]['server']) {
-          return TRUE;
-        }
-      }
-    }
-    return FALSE;
-  }
-
-  public function getDocrootList() {
-    foreach ($this->docroots as $docroot) {
-      $docroots[] = $docroot->data['name'];
-    }
-    return $docroots;
-  }
-
-  public function generateBackupLocation(DrupalSite $site) {
-
-  }
-
-  public function getBackupLocation() {
-    if (File::checkDirectory($this->local['backup'])) {
-      return $this->local['backup'];
-    }
-    elseif (File::checkDirectory(ROOT_DIR . "/backups")) {
-      return ROOT_DIR . "/backups";
+    if (isset($configs['backup'])) {
+      File::checkDirectory($configs['backup'] . '/' . $path);
+      return $configs['backup'] . '/' . $path;
     }
     else {
-      return '/tmp';
+      File::checkDirectory(ROOT_DIR . '/backups/' . $path);
+      return ROOT_DIR . '/backups/' . $path;
     }
   }
 
