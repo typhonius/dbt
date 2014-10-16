@@ -11,7 +11,8 @@
     "require": {
         "php": ">=5.4",
         "symfony/symfony": "2.5.*",
-        "symfony/Filesystem": "2.5.*"
+        "symfony/Filesystem": "2.5.*",
+        "symfony/Finder": "2.5.*"
     },
     "authors": [
         {
