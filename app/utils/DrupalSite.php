@@ -2,29 +2,59 @@
 
 namespace BackupOop\Utils;
 
-use config\ConfigBase;
-use config\LocalBackupConfig;
+use BackupOop\Config\ConfigBase;
+use BackupOop\Config\LocalBackupConfig;
 
 class DrupalSite {
 
+  /**
+   * @var
+   */
   protected $hostname;
 
+  /**
+   * @var
+   */
   protected $port;
 
+  /**
+   * @var
+   */
   protected $user;
 
+  /**
+   * @var
+   */
   protected $key;
 
+  /**
+   * @var
+   */
   protected $path;
 
+  /**
+   * @var
+   */
   protected $url;
 
+  /**
+   * @var
+   */
   protected $docroot;
 
+  /**
+   * @var
+   */
   protected $environment;
 
+  /**
+   * @var
+   */
   protected $server;
 
+  /**
+   * @var array
+   */
   protected $backup = array();
 
   /**
@@ -44,56 +74,28 @@ class DrupalSite {
     $this->backup = isset($environment['backup']) ? $environment['backup'] : array('files', 'db', 'code');
   }
 
-  public function setHostname($hostname) {
-    $this->hostname = $hostname;
-  }
-
   public function getHostname() {
     return $this->hostname;
-  }
-
-  public function setPort($port) {
-    $this->port = $port;
   }
 
   public function getPort() {
     return $this->port;
   }
 
-  public function setUser($user) {
-    $this->user = $user;
-  }
-
   public function getUser() {
     return $this->user;
-  }
-
-  public function setKey($key) {
-    $this->key = $key;
   }
 
   public function getKey() {
     return $this->key;
   }
 
-  public function setPath($path) {
-    $this->path = $path;
-  }
-
   public function getPath() {
     return $this->path;
   }
 
-  public function setUrl($url) {
-    $this->url = $url;
-  }
-
   public function getUrl() {
     return $this->url;
-  }
-
-  public function setBackup($backup) {
-    $this->backup = $backup;
   }
 
   public function getBackup() {
