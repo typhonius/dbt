@@ -19,10 +19,9 @@ class BackupCommand extends Command {
   private $verbosity;
   private $backup;
 
-  public function __construct() {
-    parent::__construct();
-  }
-
+  /**
+   *
+   */
   protected function configure() {
     $this
       ->setName("Backup")
@@ -37,6 +36,10 @@ class BackupCommand extends Command {
 
   }
 
+  /**
+   * @param InputInterface $input
+   * @param OutputInterface $output
+   */
   protected function execute(InputInterface $input, OutputInterface $output) {
     global $configs;
 
@@ -59,64 +62,68 @@ class BackupCommand extends Command {
     $config->runPostBackupTasks();
   }
 
+  /**
+   * @param OutputInterface $output
+   * @param ConfigInterface $config
+   */
   private function runBackup(OutputInterface $output, ConfigInterface $config) {
 
     /** @var DrupalSite $site */
     foreach ($config->getSites() as $site) {
 
-    // The user may set defaults in the site yaml file. These may be overwritten
-    // using the command line --download option. If neither are set we default
-    // to download everything.
-    $download = $this->getDownloadOptions($this->download, $site->backup);
+      // The user may set defaults in the site yaml file. These may be overwritten
+      // using the command line --download option. If neither are set we default
+      // to download everything.
+      $download = $this->getDownloadOptions($this->backup, $site);
 
-      $backup_path = $config->getBackupLocation($site, 'code');
+      $command = [];
+      // get conf_path()
 
-    if (in_array('files', $download)) {
-      $public_files = $site->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES',  "print variable_get(\"file_public_path\", \"sites/default/files\");");
-      $command[] = escapeshellcmd("rsync -aPh -f '+ */' -f '+ */files/***' -f '- *' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/{$public_files} {$this->backup_path}/" . CODEDIR);
-    }
-    if (in_array('code', $download)) {
-      $command[] = escapeshellcmd("rsync -aPh -f '- sites/*/files' -f '- .git' {$this->server['sshuser']}:{$this->docroot['environments'][$this->env]['path']}/ {$this->backup_path}/" . FILEDIR);
-    }
-    if (in_array('db', $download)) {
-      // Get the DB credentials
-      $databases = unserialize($site->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
-      $credentials = &$databases['default']['default'];
+      if (in_array('files', $download)) {
+        $backup_path = $config->getBackupLocation($site, 'files');
+        $public_files = $site->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES', "print variable_get(\"file_public_path\", \"sites/default/files\");");
+        // @TODO have external function to generate this command
+        $command[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPh -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$public_files} {$backup_path}");
+      }
 
-      if ($credentials['driver'] == 'mysql') {
-        $credentials['port'] = $credentials['port'] ?: 3306;
-        $dump_command = escapeshellcmd("mysqldump '-h{$credentials['host']}' '-P{$credentials['port']}' '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
+      if (in_array('code', $download)) {
+        $backup_path = $config->getBackupLocation($site, 'code');
+        $command[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPh -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backup_path}");
       }
-      else {
-        throw new \Exception;
-      }
-      $command[] = "ssh -p{$this->server['port']} {$this->server['user']}@{$this->server['hostname']} '{$dump_command} | gzip -c' > {$this->backup_path}/" . DBDIR . "/{$this->docroot['machine']}.sql.gz";
-    }
-    foreach ($command as $c) {
-      if ($this->verbosity) {
-        //$output->writeln(passthru($rsync));
-        //passthru($c);
-      }
-      foreach ($command as $c) {
-        if ($this->verbosity) {
-          //$output->writeln(passthru($rsync));
-          //passthru($c);
+      if (in_array('db', $download)) {
+        $backup_path = $config->getBackupLocation($site, 'db');
+        // Get the DB credentials
+        $databases = unserialize($site->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
+        $credentials = &$databases['default']['default'];
+
+        if ($credentials['driver'] == 'mysql') {
+          $credentials['port'] = $credentials['port'] ?: 3306;
+          $dump_command = escapeshellcmd("mysqldump '-h{$credentials['host']}' '-P{$credentials['port']}' '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
+          $command[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dump_command} | gzip -c' > {$backup_path}/{$site->getDocroot()}.sql.gz";
         }
         else {
-          //exec($c);
+          //throw new \Exception;
         }
+      }
+      foreach ($command as $c) {
+//        if ($this->verbosity) {
+//          $output->writeln(passthru($c));
+          passthru($c);
+//        }
+//        else {
+//          exec($c);
+//        }
       }
     }
   }
 
   /**
-   * Executes a command remotely after bootstrapping Drupal to the requested level.
-   *
+   * @param DrupalSite $site
    * @param string $bootstrap
    * @param string $command
    * @return string
    */
-  private function execRemoteCommand($bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
+  private function execRemoteCommand(DrupalSite $site, $bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
     $remote_command = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->docroot['environments'][$this->env]['uri']}\"; define(\"DRUPAL_ROOT\", \"{$this->docroot['environments'][$this->env]['path']}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
     $connection = ssh2_connect($this->server['hostname'], $this->server['port']);
     ssh2_auth_pubkey_file($connection, $this->server['user'], $this->server['key'] . '.pub', $this->server['key']);
@@ -126,7 +133,11 @@ class BackupCommand extends Command {
     return stream_get_contents($stream_out);
   }
 
-
+  /**
+   * @param array $cli
+   * @param DrupalSite $conf
+   * @return array
+   */
   private function getDownloadOptions($cli, DrupalSite $conf) {
     $downloads = !empty($cli) ? $cli : $conf->getBackup();
 
