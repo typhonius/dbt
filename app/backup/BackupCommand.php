@@ -1,17 +1,14 @@
 <?php
 
-namespace backup;
+namespace BackupOop\Backup;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use utils\DrupalSite;
-
-define('FILEDIR', 'files');
-define('CODEDIR', 'code');
-define('DBDIR', 'db');
+use BackupOop\Utils\DrupalSite;
+use BackupOop\Config\ConfigInterface;
 
 class BackupCommand extends Command {
   private $backup_path;
@@ -20,7 +17,7 @@ class BackupCommand extends Command {
   private $server;
   private $env;
   private $verbosity;
-  private $download;
+  private $backup;
 
   public function __construct() {
     parent::__construct();
@@ -36,14 +33,15 @@ class BackupCommand extends Command {
       ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array())
       ->addOption('show', null, InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments available')
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
-      ->addOption('download', 'dl', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array());
+      ->addOption('backup', 'b', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array());
 
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
     global $configs;
 
-    $class = "config\\" . $configs["class"];
+    /* @var $class ConfigInterface */
+    $class = $configs["class"];
 
     if ($input->getOption('show')) {
       $all = new $class(array(), array(), array());
@@ -51,29 +49,27 @@ class BackupCommand extends Command {
       return;
     }
 
-    $this->config = new $class($input->getOption('servers'), $input->getOption('docroots'), $input->getOption('envs'));
+    /** @var ConfigInterface $config */
+    $config = new $class($input->getOption('servers'), $input->getOption('docroots'), $input->getOption('envs'));
     $this->verbosity = $input->getOption('verbose');
-    $this->download = $input->getOption('download');
+    $this->backup = $input->getOption('backup');
 
-    foreach ($this->config->envs as $env) {
-      $env['server'] = $this->config->getServerConfig($env['env']['server']);
-      $site = new DrupalSite($env);
-      $this->runBackup($output, $site);
-    }
+    $this->runBackup($output, $config);
+
+    $config->runPostBackupTasks();
   }
 
-  private function runBackup(OutputInterface $output, DrupalSite $site) {
+  private function runBackup(OutputInterface $output, ConfigInterface $config) {
 
-    // TODO this should be part of config
-    //$this->config->
-    //$this->generateBackupPath();
+    /** @var DrupalSite $site */
+    foreach ($config->getSites() as $site) {
 
     // The user may set defaults in the site yaml file. These may be overwritten
     // using the command line --download option. If neither are set we default
     // to download everything.
     $download = $this->getDownloadOptions($this->download, $site->backup);
 
-    $command = array();
+      $backup_path = $config->getBackupLocation($site, 'code');
 
     if (in_array('files', $download)) {
       $public_files = $site->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES',  "print variable_get(\"file_public_path\", \"sites/default/files\");");
@@ -101,8 +97,14 @@ class BackupCommand extends Command {
         //$output->writeln(passthru($rsync));
         //passthru($c);
       }
-      else {
-        //exec($c);
+      foreach ($command as $c) {
+        if ($this->verbosity) {
+          //$output->writeln(passthru($rsync));
+          //passthru($c);
+        }
+        else {
+          //exec($c);
+        }
       }
     }
   }
@@ -124,33 +126,12 @@ class BackupCommand extends Command {
     return stream_get_contents($stream_out);
   }
 
-  private function generateBackupPath() {
-    $backup = $this->config->getBackupLocation();
-    $dir = "{$backup}/{$this->docroot['machine']}/{$this->env}/{$this->server['machine']}";
-    if (File::checkDirectory($dir)) {
-      $this->backup_path = $dir;
-      $this->generateBackupDirs();
-    }
-    else {
-     // throw new IncorrectSitenameException
-      // error
-    }
-  }
 
-  private function getDownloadOptions($cli, $conf) {
-    $downloads = isset($conf['download']) ? $conf['download'] : array();
-    $downloads = !empty($cli) ? $cli : $downloads;
-    $downloads = empty($downloads) ? array('files', 'code', 'db') : $downloads;
+  private function getDownloadOptions($cli, DrupalSite $conf) {
+    $downloads = !empty($cli) ? $cli : $conf->getBackup();
 
-    return $downloads;
-  }
-
-  private function generateBackupDirs() {
-    if (file_exists($this->backup_path)) {
-      @mkdir("{$this->backup_path}/" . CODEDIR, 0755, TRUE);
-      @mkdir("{$this->backup_path}/" . FILEDIR, 0755, TRUE);
-      @mkdir("{$this->backup_path}/" . DBDIR, 0755, TRUE);
-    }
+    $allowed = ['db', 'code', 'files'];
+    return array_intersect(array_combine($downloads, $downloads), $allowed);
   }
 
 }
