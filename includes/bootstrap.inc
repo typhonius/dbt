@@ -2,10 +2,13 @@
 
 use Symfony\Component\Console\Application;
 Use Symfony\Component\Yaml\Yaml;
-use backup\BackupCommand;
-use utils\ConfigFileNotFoundException;
+use BackupOop\Backup\BackupCommand;
+use BackupOop\Utils\ConfigFileNotFoundException;
 
 define('CONFIG', ROOT_DIR . '/config');
+define('FILEDIR', 'files');
+define('CODEDIR', 'code');
+define('DBDIR', 'db');
 
 global $configs;
 
