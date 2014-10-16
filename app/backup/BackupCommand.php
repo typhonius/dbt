@@ -11,16 +11,11 @@ use BackupOop\Utils\DrupalSite;
 use BackupOop\Config\ConfigInterface;
 
 class BackupCommand extends Command {
-  private $backup_path;
-  private $config;
-  private $docroot;
-  private $server;
-  private $env;
   private $verbosity;
   private $backup;
 
   /**
-   *
+   * @inheritdoc
    */
   protected function configure() {
     $this
@@ -37,8 +32,7 @@ class BackupCommand extends Command {
   }
 
   /**
-   * @param InputInterface $input
-   * @param OutputInterface $output
+   * @inheritdoc
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     global $configs;
@@ -115,22 +109,6 @@ class BackupCommand extends Command {
 //        }
       }
     }
-  }
-
-  /**
-   * @param DrupalSite $site
-   * @param string $bootstrap
-   * @param string $command
-   * @return string
-   */
-  private function execRemoteCommand(DrupalSite $site, $bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
-    $remote_command = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->docroot['environments'][$this->env]['uri']}\"; define(\"DRUPAL_ROOT\", \"{$this->docroot['environments'][$this->env]['path']}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
-    $connection = ssh2_connect($this->server['hostname'], $this->server['port']);
-    ssh2_auth_pubkey_file($connection, $this->server['user'], $this->server['key'] . '.pub', $this->server['key']);
-    $stream = ssh2_exec($connection, $remote_command);
-    stream_set_blocking($stream, true);
-    $stream_out = ssh2_fetch_stream($stream, SSH2_STREAM_STDIO);
-    return stream_get_contents($stream_out);
   }
 
   /**

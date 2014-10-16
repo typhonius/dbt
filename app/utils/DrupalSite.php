@@ -119,8 +119,8 @@ class DrupalSite {
    * @param string $command
    * @return string
    */
+  // @TODO should this be in the Backup class?
   public function execRemoteCommand($bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
-
     $remote_command = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DRUPAL_ROOT\", \"{$this->path}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
     $connection = ssh2_connect($this->hostname, $this->port);
     if (!ssh2_auth_pubkey_file($connection, $this->user, $this->key . '.pub', $this->key, "")) {

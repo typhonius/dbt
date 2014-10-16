@@ -3,6 +3,7 @@
 namespace BackupOop\Utils;
 
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 
 class File {
   public $files = array();
