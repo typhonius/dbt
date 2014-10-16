@@ -1,11 +1,15 @@
 <?php
 
-namespace utils;
+namespace BackupOop\Utils;
+
+use Symfony\Component\Filesystem\Filesystem;
 
 class File {
   public $files = array();
 
   public static function loadFiles($path, $mask) {
+    // http://symfony.com/doc/current/components/finder.html
+    // @TODO use Finder
     if (is_dir($path) && $handle = @opendir($path)) {
       $files = array();
       while (FALSE !== ($filename = readdir($handle))) {
@@ -25,13 +29,13 @@ class File {
   }
 
   public static function checkDirectory($path) {
-    if (is_dir($path) && is_writeable($path)) {
-      return TRUE;
+    $fs = new Filesystem();
+    if ($fs->exists($path) && !is_writeable($path)) {
+      $fs->chown($path, 0700);
     }
-    elseif (@mkdir($path, 0755, TRUE)) {
-      return TRUE;
+    else {
+      $fs->mkdir($path, 0700);
     }
-    return FALSE;
   }
 
 }

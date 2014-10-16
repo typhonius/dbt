@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: adam.malone
- * Date: 29/9/13
- * Time: 03:10 23
- * To change this template use File | Settings | File Templates.
- */
 
-namespace utils;
+namespace BackupOop\Utils;
 
 
 class BackupException {
