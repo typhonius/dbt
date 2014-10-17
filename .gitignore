@@ -3,3 +3,4 @@ config/docroots/*
 config/servers/*
 config/local/*
 .idea
+vendor
