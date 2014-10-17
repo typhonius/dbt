@@ -2,9 +2,6 @@
 
 namespace BackupOop\Utils;
 
-use BackupOop\Config\ConfigBase;
-use BackupOop\Config\LocalBackupConfig;
-
 class DrupalSite {
 
   /**
@@ -57,6 +54,8 @@ class DrupalSite {
    */
   protected $backup = array();
 
+  private $keypass;
+
   /**
    * @param $server
    * @param $environment
@@ -74,59 +73,101 @@ class DrupalSite {
     $this->backup = isset($environment['backup']) ? $environment['backup'] : array('files', 'db', 'code');
   }
 
-  public function getHostname() {
-    return $this->hostname;
-  }
-
-  public function getPort() {
-    return $this->port;
-  }
-
+  /**
+   * @return mixed
+   */
   public function getUser() {
     return $this->user;
   }
 
-  public function getKey() {
-    return $this->key;
-  }
-
-  public function getPath() {
-    return $this->path;
-  }
-
-  public function getUrl() {
-    return $this->url;
-  }
-
+  /**
+   * @return array
+   */
   public function getBackup() {
     return $this->backup;
   }
 
+  /**
+   * @return mixed
+   */
   public function getDocroot() {
     return $this->docroot;
   }
 
+  /**
+   * @return mixed
+   */
   public function getEnvironment() {
     return $this->environment;
   }
 
+  /**
+   * @return mixed
+   */
+  public function getHostname() {
+    return $this->hostname;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getKey() {
+    return $this->key;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getPort() {
+    return $this->port;
+  }
+
+  /**
+   * @return mixed
+   */
   public function getServer() {
     return $this->server;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getUrl() {
+    return $this->url;
+  }
+
+  /**
+   * @param mixed $keypass
+   */
+  public function setKeypass($keypass) {
+    $this->keypass = $keypass;
+  }
+
+  public function isKeypassEntered() {
+    return isset($this->keypass);
   }
 
   /**
    * @param string $bootstrap
    * @param string $command
    * @return string
+   * @throws Ssh2ConnectionException
    */
-  // @TODO should this be in the Backup class?
   public function execRemoteCommand($bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '') {
     $remote_command = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DRUPAL_ROOT\", \"{$this->path}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
     $connection = ssh2_connect($this->hostname, $this->port);
-    if (!ssh2_auth_pubkey_file($connection, $this->user, $this->key . '.pub', $this->key, "")) {
-      // Prompt for password
-      // http://symfony.com/doc/current/components/console/helpers/questionhelper.html
+
+    if (!ssh2_auth_pubkey_file($connection, $this->user, $this->key . '.pub', $this->key, $this->keypass)) {
+      throw new Ssh2ConnectionException(sprintf("Could not connect to %s on port %d as %s", $this->hostname, $this->port, $this->user));
     }
+
     $stream = ssh2_exec($connection, $remote_command);
     stream_set_blocking($stream, true);
     $stream_out = ssh2_fetch_stream($stream, SSH2_STREAM_STDIO);
