@@ -1,18 +1,17 @@
 {
-    "name": "typhonius/backup_oop",
-    "description": "A backup solution for multiple Drupal sites",
-    "autoload": {
-        "psr-4": {
-            "BackupOop\\Backup\\": "app/backup/",
-            "BackupOop\\Config\\": "app/config/",
-            "BackupOop\\Utils\\": "app/utils/"
-        }
-    },
+    "name": "typhonius/dbt",
+    "description": "Drupal Backup Tool (DBT): A backup solution for multiple Drupal sites",
     "require": {
         "php": ">=5.4",
-        "symfony/symfony": "2.5.*",
-        "symfony/Filesystem": "2.5.*",
-        "symfony/Finder": "2.5.*"
+        "symfony/console": "3.1.*",
+        "symfony/filesystem": "3.1.*",
+        "symfony/finder": "3.1.*",
+        "symfony/yaml": "3.1.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "DrupalBackup\\": "src/"
+        }
     },
     "authors": [
         {

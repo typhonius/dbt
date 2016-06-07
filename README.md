@@ -1,7 +1,7 @@
-backup_oop
+Drupal Backup Tool (DBT)
 ==========
 
-This script provides a quick and configurable way to backup Drupal sites via rsync. Built on the [Symfony](http://symfony.com/) framework and extending the [Command Class](http://api.symfony.com/2.0/Symfony/Component/Console/Command/Command.html) it provides a configurable way of backing up larger numbers of Drupal sites with little effort.
+This console application provides a quick and configurable way to backup Drupal sites via rsync. Built on the [Symfony](http://symfony.com/) framework and extending the [Command Class](http://api.symfony.com/2.0/Symfony/Component/Console/Command/Command.html) it provides a configurable way of backing up larger numbers of Drupal sites with little effort.
 
 
 Options
@@ -28,8 +28,8 @@ key: /Users/example/.ssh/id_rsa
 ````
 
 
-**Docroot**
-Docroot configuration requires the same human and machine name for each configuration file. It also splits docroots into environments to cater for sites on different servers or locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
+**Site**
+Site configuration requires the same human and machine name for each configuration file. It also splits sites into environments to cater for docroots on different servers or locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
 
 ````
 name: My Example Site

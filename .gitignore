@@ -1,6 +1,6 @@
 backups
-config/docroots/*
-config/servers/*
-config/local/*
+app/config/docroots/*
+app/config/servers/*
+app/config/local/*
 .idea
 vendor
