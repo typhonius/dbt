@@ -1,2 +1,2 @@
 backup: 'backups'
-class: 'LocalBackupConfig'
+class: 'DrupalBackup\BackupConfig\LocalBackupConfig'

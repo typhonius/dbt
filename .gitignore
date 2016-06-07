@@ -1,5 +1,5 @@
 backups
-app/config/docroots/*
+app/config/sites/*
 app/config/servers/*
 app/config/local/*
 .idea

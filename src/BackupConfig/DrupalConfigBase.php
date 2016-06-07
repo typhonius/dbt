@@ -80,7 +80,7 @@ class DrupalConfigBase implements DrupalConfigBaseInterface
 
         foreach ($sites as $site) {
             foreach ($site['environments'] as $envName => $environment) {
-                if (!in_array($envName, $envs)) {
+                if (!empty($envs) && !in_array($envName, $envs)) {
                     continue;
                 }
                 $docrootId = $site['machine'].".".$envName;

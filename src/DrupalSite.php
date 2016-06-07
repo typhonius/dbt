@@ -249,12 +249,17 @@ class DrupalSite
     public function execRemoteCommand($bootstrap = 'DRUPAL_BOOTSTRAP_FULL', $command = '')
     {
         $remoteCommand = "php -r '\$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DRUPAL_ROOT\", \"{$this->path}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
-        $connection = ssh2_connect($this->getHostname(), $this->getPort());
+        try {
+            if (!@$connection = ssh2_connect($this->getHostname(), $this->getPort())) {
+                throw new Ssh2ConnectionException(sprintf("Could not connect to %s on port %d as %s", $this->getHostname(), $this->getPort(), $this->getUser()));
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
 
-        // @TODO change this to authentication and connection
         try {
             if (!@ssh2_auth_pubkey_file($connection, $this->getUser(), $this->getKey().'.pub', $this->getKey(), $this->keypass)) {
-                throw new Ssh2ConnectionException(sprintf("Could not connect to %s on port %d as %s", $this->getHostname(), $this->getPort(), $this->getUser()));
+                throw new Ssh2ConnectionException(sprintf("Could not successfully authenticate key %s. Was the public key password correct?", $this->getKey()));
             }
         } catch (\Exception $e) {
             throw $e;
