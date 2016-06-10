@@ -38,16 +38,16 @@ class BackupCommand extends Command
     protected function configure()
     {
         $this
-            ->setName("dbt:backup")
-            ->setHelp("Help will go here")// TODO Maybe use a function to return help.
-            ->setDescription('Backup all available docroots on all available servers.')
-            ->addOption('envs', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array())
-            ->addOption('docroots', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup specific docroots', array())
-            ->addOption('servers', 's', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array())
-            ->addOption('show', null, InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments available')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup.')
-            ->addOption('backup', 'b', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array());
-
+            ->setName('dbt:backup')
+            ->setHelp('DBT provides a quick and configurable way to backup many Drupal sites without a reliance on tools not commonly installed on remote servers.')
+            ->setDescription('Backup Drupal sites.')
+            ->addOption('env', 'e', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', array())
+            ->addOption('site', 'w', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup specific sites', array())
+            ->addOption('server', 's', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', array())
+            ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments that would have been backed up')
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup into a uniquely named directory.')
+            ->addOption('backup', 'b', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Select a combination of code, files and db to download only those components.', array())
+            ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'The SSH Key password to allow automated backup when run non-interactively.');
     }
 
     /**
@@ -55,38 +55,41 @@ class BackupCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // A docroot is an environment of a site running on a server e.g. dev.example.com would be the 'dev'
+        // environment of the 'example' site running on server 'foo'.
+        $docroots = $this->config->getDocroots($input->getOption('server'), $input->getOption('site'), $input->getOption('env'));
 
-        $class = $this->config->getBackupClass();
-
-        if ($input->getOption('show')) {
-            $all = new $class(array(), array(), array());
-            $output->writeln('<info>Information about all resources will go here.</info>');
-
-            return;
-        }
-
-        $this->runBackup($input, $output);
-
-    }
-
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @throws DatabaseDriverNotSupportedException
-     * @throws \Exception
-     * @throws Exception\Ssh2ConnectionException
-     */
-    private function runBackup(InputInterface $input, OutputInterface $output)
-    {
-
-        $docroots = $this->config->getDocroots($input->getOption('servers'), $input->getOption('docroots'), $input->getOption('envs'));
+        $dryrun = $input->getOption('dry-run');
 
         foreach ($docroots as &$docroot) {
             /* @var $docroot DrupalSite */
 
-            $output->writeln("<info>Starting backup of {$docroot->id}</info>");
-            if ($input->isInteractive()) {
-                if (!$docroot->isKeypassEntered()) {
+            if ($dryrun) {
+                $id = $docroot->getId();
+                $server = $docroot->getHostname();
+
+                // @TODO provide better information here.
+                $output->writeln("<info>ID: ${id} Server: $server</info>");
+                continue;
+            }
+
+            $output->writeln("<info>Starting backup of {$docroot->getId()}</info>");
+
+            // The user may set defaults in the site yaml file. These may be overwritten
+            // using the command line --backup option. If neither are set we default
+            // to download everything.
+            $docroot->setBackupOptions($input->getOption('backup'));
+
+            $docroot->setUnique($input->getOption('force'));
+
+            if ($keypass = $input->getOption('password')) {
+                $docroot->setKeypass($keypass);
+            }
+
+            if (!$docroot->isKeypassEntered()) {
+                if (!$input->isInteractive()) {
+                    throw new \Exception('Unable to run non-interactively without the password option.');
+                } else {
                     $helper = $this->getHelper('question');
                     $question = new ConfirmationQuestion("<question>Is the SSH key for {$docroot->getHostname()} encrypted?</question> ", false);
                     if ($helper->ask($input, $output, $question)) {
@@ -99,16 +102,7 @@ class BackupCommand extends Command
                 }
             }
 
-            // The user may set defaults in the site yaml file. These may be overwritten
-            // using the command line --backup option. If neither are set we default
-            // to download everything.
-            $docroot->setBackupOptions($input->getOption('backup'));
-
-            $docroot->setUnique($input->getOption('force'));
-
             $command = [];
-            // @TODO get conf_path()
-            // include sites all
 
             if (in_array('files', $docroot->getBackupOptions())) {
                 $command['files'] = $this->config->getBackupCommand($docroot, 'files');

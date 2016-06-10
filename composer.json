@@ -1,6 +1,7 @@
 {
     "name": "typhonius/dbt",
     "description": "Drupal Backup Tool (DBT): A backup solution for multiple Drupal sites",
+    "license": "MIT",
     "require": {
         "php": ">=5.4",
         "symfony/console": "3.1.*",
@@ -9,6 +10,7 @@
         "symfony/yaml": "3.1.*"
     },
     "autoload": {
+        "files": ["app/bootstrap.php"],
         "psr-4": {
             "DrupalBackup\\": "src/"
         }
@@ -16,7 +18,9 @@
     "authors": [
         {
             "name": "Adam Malone",
-            "email": "adam@adammalone.net"
+            "email": "adam@adammalone.net",
+            "homepage": "https://www.adammalone.net",
+            "role": "Developer"
         }
     ]
 }

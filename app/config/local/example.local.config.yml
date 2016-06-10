@@ -1,2 +1,3 @@
+machine: 'local'
 backup: 'backups'
 class: 'DrupalBackup\BackupConfig\LocalBackupConfig'

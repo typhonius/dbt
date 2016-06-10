@@ -8,10 +8,22 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Class File
+ * @package DrupalBackup
+ */
 class File
 {
+    /**
+     * @var array $files
+     */
     public $files = array();
 
+    /**
+     * @param string $path
+     * @param string $mask
+     * @return $finder Finder
+     */
     public static function loadFiles($path, $mask)
     {
         $finder = new Finder();
@@ -20,6 +32,11 @@ class File
         return $finder;
     }
 
+    /**
+     * @param string $path
+     * @param bool   $unique
+     * @return string $path
+     */
     public static function prepareDirectory($path, $unique = false)
     {
         $fs = new Filesystem();
@@ -37,6 +54,10 @@ class File
         return $path;
     }
 
+    /**
+     * @param string $path
+     * @return string $uniqDir
+     */
     public static function getUniqueDirectoryName($path)
     {
         // Copied from Filesystem->tempnam().
@@ -56,6 +77,10 @@ class File
         throw new IOException('A unique file could not be created.');
     }
 
+    /**
+     * @param SplFileInfo $file
+     * @return string
+     */
     public static function parse(SplFileInfo $file)
     {
         return Yaml::parse($file->getContents());

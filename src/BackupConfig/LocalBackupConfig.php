@@ -11,29 +11,27 @@ use DrupalBackup\File;
  * Class LocalBackupConfig
  * @package DrupalBackup\BackupConfig
  */
-class LocalBackupConfig extends DrupalConfigBase
+class LocalBackupConfig extends AbstractDrupalConfigBase
 {
 
     /**
-     * @var string $backupPath
+     * {@inheritdoc}
      */
     protected $backupPath;
 
     /**
-     * @param DrupalSite $site
-     * @param string     $component
-     * @return string
-     * @throws InvalidComponentException
+     * {@inheritdoc}
      */
     public function getBackupLocation(DrupalSite $site, $component)
     {
         if (!$this->getBackupPath()) {
-            $path = $site->getId().'/'.date('Y-m-d');
+            $sitePath = $site->getId().'/'.date('Y-m-d');
 
-            if (isset($this->localConfig['backup'])) {
-                $path = $this->localConfig['backup'].'/'.$path;
+            $localConfig = $this->loadConfig(self::CONFIG_DIR.'/local');
+            if ($path = $localConfig['local']['backup']) {
+                $path .= '/'.$sitePath;
             } else {
-                $path = ROOT_DIR.'/backups/'.$path;
+                $path = ROOT_DIR.'/backups/'.$sitePath;
             }
 
             // Create interim directory with unique name if needed.
@@ -61,6 +59,9 @@ class LocalBackupConfig extends DrupalConfigBase
         return $path;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getBackupCommand(DrupalSite $site, $component)
     {
 
@@ -101,7 +102,7 @@ class LocalBackupConfig extends DrupalConfigBase
     }
 
     /**
-     * @param string $path
+     * {@inheritdoc}
      */
     public function setBackupPath($path)
     {
@@ -109,7 +110,7 @@ class LocalBackupConfig extends DrupalConfigBase
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getBackupPath()
     {
