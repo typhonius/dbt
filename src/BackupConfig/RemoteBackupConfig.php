@@ -34,14 +34,4 @@ class RemoteBackupConfig extends AbstractDrupalConfigBase
     {
         // TODO: Implement getBackupCommand() method.
     }
-
-    /**
-     * Returns the backup path.
-     *
-     * @return string
-     */
-    public function getBackupPath()
-    {
-        // TODO: Implement getBackupPath() method.
-    }
 }

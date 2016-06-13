@@ -18,6 +18,11 @@ class DrupalSite
     public $id;
 
     /**
+     * @var string $backupPath
+     */
+    public $backupPath;
+
+    /**
      * @var string $hostname
      */
     protected $hostname;
@@ -92,6 +97,22 @@ class DrupalSite
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackupPath()
+    {
+        return $this->backupPath;
+    }
+
+    /**
+     * @param string $backupPath
+     */
+    public function setBackupPath($backupPath)
+    {
+        $this->backupPath = $backupPath;
     }
 
     /**

@@ -31,13 +31,6 @@ interface DrupalConfigBaseInterface
     public function getBackupCommand(DrupalSite $site, $component);
 
     /**
-     * Returns the backup path.
-     *
-     * @return string
-     */
-    public function getBackupPath();
-
-    /**
      * Returns the docroots loaded from configuration that will be backed up.
      *
      * @param array $servers

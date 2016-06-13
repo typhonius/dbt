@@ -16,14 +16,9 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
     /**
      * {@inheritdoc}
      */
-    protected $backupPath;
-
-    /**
-     * {@inheritdoc}
-     */
     public function prepareBackupLocation(DrupalSite $site, $component)
     {
-        if (!$this->getBackupPath()) {
+        if (!$site->getBackupPath()) {
             $sitePath = $site->getId().'/'.date('Y-m-d');
 
             $localConfig = $this->loadConfig(self::CONFIG_DIR.'/local');
@@ -38,10 +33,8 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
 
             // Temporarily cache the backup path for this particular Drupal site so we can store everything within
             // the same uniquely named directory.
-            $this->setBackupPath($backupPath);
+            $site->setBackupPath($backupPath);
         }
-
-        $path = $this->getBackupPath();
 
         switch ($component) {
             case 'code':
@@ -53,9 +46,8 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 throw new InvalidComponentException(sprintf("The backup component '%s' is invalid. Only code, files and db are accepted.", $component));
         }
 
-        File::prepareDirectory($path);
+        File::prepareDirectory($site->getBackupPath());
 
-        return $path;
     }
 
     /**
@@ -72,12 +64,12 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 $site->setPublicFilesPath($site->loadPublicFilesPath());
                 // $site->setPrivateFilesPath($site->loadPrivateFilesPath());
 
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$this->getBackupPath()}");
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$site->getBackupPath()}");
                 break;
 
             case 'code':
                 $this->prepareBackupLocation($site, $component);
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$this->getBackupPath()}");
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$site->getBackupPath()}");
                 break;
 
             case 'db':
@@ -85,26 +77,10 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 $dbCredentials = $site->loadDbCredentials();
 
                 $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'");
-                $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$this->getBackupPath()}/{$site->getId()}.sql.gz";
+                $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$site->getBackupPath()}/{$site->getId()}.sql.gz";
                 break;
         }
 
         return $return;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setBackupPath($path)
-    {
-        $this->backupPath = $path;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBackupPath()
-    {
-        return $this->backupPath;
     }
 }

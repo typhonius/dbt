@@ -100,6 +100,10 @@ class BackupCommand extends Command
             foreach ($docroot->getBackupOptions() as $component) {
                 $output->writeln(sprintf("<comment>Downloading %s</comment>", $component));
 
+                if ($dryrun) {
+                    continue;
+                }
+
                 // Allow for multiple commands per component.
                 $commands = $this->config->getBackupCommand($docroot, $component);
 
@@ -114,7 +118,7 @@ class BackupCommand extends Command
                         exec($c);
                     }
                 }
-                $output->writeln(sprintf("<info>%s downloaded to %s</info>", $component, $this->config->getBackupPath()));
+                $output->writeln(sprintf("<info>%s downloaded to %s</info>", $component, $docroot->getBackupPath()));
 
             }
 
