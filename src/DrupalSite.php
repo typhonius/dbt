@@ -2,6 +2,7 @@
 
 namespace DrupalBackup;
 
+use DrupalBackup\Exception\DatabaseDriverNotSupportedException;
 use DrupalBackup\Exception\Ssh2ConnectionException;
 
 /**
@@ -57,9 +58,24 @@ class DrupalSite
     protected $backup = array();
 
     /**
+     * @var string $publicFilesPath
+     */
+    protected $publicFilesPath;
+
+    /**
+     * @var string $privateFilesPath
+     */
+    protected $privateFilesPath;
+
+    /**
      * @var $keypass
      */
     private $keypass;
+
+    /**
+     * @var array $dbCredentials
+     */
+    private $dbCredentials;
 
     /**
      * DrupalSite constructor.
@@ -237,6 +253,70 @@ class DrupalSite
         $this->setPort($server['port']);
         $this->setUser($server['user']);
         $this->setKey($server['key']);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function loadPublicFilesPath()
+    {
+        return $this->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES', "print variable_get(\"file_public_path\", \"sites/default/files\");");
+
+    }
+
+    public function getPublicFilesPath()
+    {
+        return $this->publicFilesPath;
+    }
+
+    public function setPublicFilesPath($privateFilesPath)
+    {
+        $this->privateFilesPath = $privateFilesPath;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function loadPrivateFilesPath()
+    {
+        return $this->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES', "print variable_get(\"file_private_path\", \"\");");
+    }
+
+    public function getPrivateFilesPath()
+    {
+        return $this->privateFilesPath;
+    }
+
+    public function setPrivateFilesPath($privateFilesPath)
+    {
+        $this->privateFilesPath = $privateFilesPath;
+    }
+
+    /**
+     * @throws DatabaseDriverNotSupportedException
+     * @throws \Exception
+     */
+    public function loadDbCredentials()
+    {
+        $databases = unserialize($this->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
+        $credentials = &$databases['default']['default'];
+
+        if ($credentials['driver'] !== 'mysql') {
+            throw new DatabaseDriverNotSupportedException(sprintf("The remote database driver is %s. Only MySQL is accepted.", $credentials['driver']));
+        }
+        $credentials['port'] = $credentials['port'] ?: 3306;
+
+        return $credentials;
+    }
+
+    public function getDbCredentials()
+    {
+        return $this->dbCredentials;
+    }
+
+    public function setDbCredentials($dbCredentials)
+    {
+        $this->dbCredentials = $dbCredentials;
     }
 
     /**

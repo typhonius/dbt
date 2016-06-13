@@ -1,6 +1,0 @@
-name: Second Example Server
-machine: example_server_two
-hostname: bar.example.com
-user: ex
-port: 15671
-key: /home/afk/.ssh/id_dsa

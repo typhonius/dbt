@@ -14,22 +14,28 @@ interface DrupalConfigBaseInterface
 {
 
     /**
-     * Returns the path location to where the backup should be stored.
+     * Prepares the path location to where the backup should be stored.
      *
      * @param DrupalSite $site
      * @param string     $component
-     * @return string
      */
-    public function getBackupLocation(DrupalSite $site, $component);
+    public function prepareBackupLocation(DrupalSite $site, $component);
 
     /**
      * Returns the command that needs to be executed for a backup to run.
      *
      * @param DrupalSite $site
      * @param string     $component
-     * @return string
+     * @return array
      */
     public function getBackupCommand(DrupalSite $site, $component);
+
+    /**
+     * Returns the backup path.
+     *
+     * @return string
+     */
+    public function getBackupPath();
 
     /**
      * Returns the docroots loaded from configuration that will be backed up.

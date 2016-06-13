@@ -20,7 +20,7 @@ Configuration files are stored in the app/config directory, although this can be
 
 **Server**
 
-The project comes with example server config to show the type of information required. At the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key should be included.
+At the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key should be included with each server configuration.
 
 ````
 name: Acquia Server
@@ -29,6 +29,15 @@ hostname: web-888.prod.hosting.acquia.com
 user: adam
 port: 22
 key: /Users/adam/.ssh/id_rsa
+````
+
+````
+name: Example Server
+machine: example_server
+hostname: foo.example.com
+user: ex
+port: 15671
+key: /Users/example/.ssh/id_rsa
 ````
 
 
@@ -50,6 +59,16 @@ environments:
     url: "test.adammalone.net"
 ````
 
+````
+name: "My Example Site"
+machine: "example_docroot"
+environments:
+  prod:
+    server: "example_server"
+    path: "/var/www/html/example_docroot/docroot"
+    url: "example.com"
+````
+
 **Local**
 
 The local configuration file provides DBT with values should they be needed. An example of this is seen in the getBackupLocation method of the LocalBackupConfig class where the local storage directory is configured.
@@ -57,8 +76,21 @@ The local configuration file provides DBT with values should they be needed. An 
 
 ## Examples
 
+````
+# Show all possible servers, sites and environments that can be backed up.
+./bin/dbt.php dbt:backup --dry-run"
+  
+# Backup all production websites from all servers.
+./bin/dbt.php dbt:backup --env prod"
+  
+# Backup any production website hosted on the 'acquia_server' server.
+./bin/dbt.php dbt:backup --server acquia_server --env prod"
+  
+# Create a brand new backup of the production environment from the 'adammalone_net' site using an SSH key password stored in a file.
+./bin/dbt.php dbt:backup --env prod --site adammalone_net --force --password "$(< /tmp/keypass)"
 
+````
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+DBT is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).

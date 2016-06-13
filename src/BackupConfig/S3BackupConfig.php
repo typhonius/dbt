@@ -5,10 +5,10 @@ namespace DrupalBackup\BackupConfig;
 use DrupalBackup\DrupalSite;
 
 /**
- * Class S3Config
+ * Class S3BackupConfig
  * @package DrupalBackup\BackupConfig
  */
-class S3Config extends RemoteConfig
+class S3BackupConfig extends RemoteBackupConfig
 {
 
 }

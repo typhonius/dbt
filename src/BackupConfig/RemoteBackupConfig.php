@@ -5,18 +5,43 @@ namespace DrupalBackup\BackupConfig;
 use DrupalBackup\DrupalSite;
 
 /**
- * Class RemoteConfig
+ * Class RemoteBackupConfig
  * @package DrupalBackup\BackupConfig
  */
-class RemoteConfig extends ConfigBase
+class RemoteBackupConfig extends AbstractDrupalConfigBase
 {
 
     /**
-     * {@inheritdoc}
+     * Prepares the path location to where the backup should be stored.
+     *
+     * @param DrupalSite $site
+     * @param string     $component
+     * @return string
      */
-    public function getBackupLocation(DrupalSite $site, $component)
+    public function prepareBackupLocation(DrupalSite $site, $component)
     {
-        // @TODO alter this for a temporay path to be pushed somewhere remote later
-        return '/tmp';
+        // TODO: Implement prepareBackupLocation() method.
+    }
+
+    /**
+     * Returns the command that needs to be executed for a backup to run.
+     *
+     * @param DrupalSite $site
+     * @param string     $component
+     * @return string
+     */
+    public function getBackupCommand(DrupalSite $site, $component)
+    {
+        // TODO: Implement getBackupCommand() method.
+    }
+
+    /**
+     * Returns the backup path.
+     *
+     * @return string
+     */
+    public function getBackupPath()
+    {
+        // TODO: Implement getBackupPath() method.
     }
 }

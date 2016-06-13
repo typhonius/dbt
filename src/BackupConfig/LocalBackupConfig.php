@@ -3,7 +3,6 @@
 namespace DrupalBackup\BackupConfig;
 
 use DrupalBackup\DrupalSite;
-use DrupalBackup\Exception\DatabaseDriverNotSupportedException;
 use DrupalBackup\Exception\InvalidComponentException;
 use DrupalBackup\File;
 
@@ -22,7 +21,7 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
     /**
      * {@inheritdoc}
      */
-    public function getBackupLocation(DrupalSite $site, $component)
+    public function prepareBackupLocation(DrupalSite $site, $component)
     {
         if (!$this->getBackupPath()) {
             $sitePath = $site->getId().'/'.date('Y-m-d');
@@ -69,32 +68,24 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
 
         switch ($component) {
             case 'files':
-                $backupPath = $this->getBackupLocation($site, $component);
-                $publicFiles = $site->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES', "print variable_get(\"file_public_path\", \"sites/default/files\");");
-                // @TODO create external command class
-                $return['command'] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$publicFiles} {$backupPath}");
-                $return['backup_location'] = $backupPath;
+                $this->prepareBackupLocation($site, $component);
+                $site->setPublicFilesPath($site->loadPublicFilesPath());
+                // $site->setPrivateFilesPath($site->loadPrivateFilesPath());
+
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$this->getBackupPath()}");
                 break;
 
             case 'code':
-                $backupPath = $this->getBackupLocation($site, $component);
-                $return['command'] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupPath}");
-                $return['backup_location'] = $backupPath;
+                $this->prepareBackupLocation($site, $component);
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$this->getBackupPath()}");
                 break;
 
             case 'db':
-                $backupPath = $this->getBackupLocation($site, $component);
-                // Get the DB credentials
-                $databases = unserialize($site->execRemoteCommand('DRUPAL_BOOTSTRAP_CONFIGURATION', "global \$databases; print serialize(\$databases);"));
-                $credentials = &$databases['default']['default'];
+                $this->prepareBackupLocation($site, $component);
+                $dbCredentials = $site->loadDbCredentials();
 
-                if ($credentials['driver'] !== 'mysql') {
-                    throw new DatabaseDriverNotSupportedException(sprintf("The remote database driver is %s. Only MySQL is accepted.", $credentials['driver']));
-                }
-                $credentials['port'] = $credentials['port'] ?: 3306;
-                $dumpCommand = escapeshellcmd("mysqldump '-h{$credentials['host']}' '-P{$credentials['port']}' '-u{$credentials['username']}' '-p{$credentials['password']}' '{$credentials['database']}'");
-                $return['command'] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$backupPath}/{$site->getId()}.sql.gz";
-                $return['backup_location'] = $backupPath;
+                $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'");
+                $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$this->getBackupPath()}/{$site->getId()}.sql.gz";
                 break;
         }
 
