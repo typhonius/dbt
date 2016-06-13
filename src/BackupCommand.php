@@ -119,7 +119,6 @@ class BackupCommand extends Command
                     }
                 }
                 $output->writeln(sprintf("<info>%s downloaded to %s</info>", $component, $docroot->getBackupPath()));
-
             }
 
             // @TODO Run some post download clean up/processing?

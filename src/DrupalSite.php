@@ -277,6 +277,7 @@ class DrupalSite
     }
 
     /**
+     * @return string
      * @throws \Exception
      */
     public function loadPublicFilesPath()
@@ -285,17 +286,24 @@ class DrupalSite
 
     }
 
+    /**
+     * @return string
+     */
     public function getPublicFilesPath()
     {
         return $this->publicFilesPath;
     }
 
+    /**
+     * @param string $privateFilesPath
+     */
     public function setPublicFilesPath($privateFilesPath)
     {
         $this->privateFilesPath = $privateFilesPath;
     }
 
     /**
+     * @return string
      * @throws \Exception
      */
     public function loadPrivateFilesPath()
@@ -303,17 +311,24 @@ class DrupalSite
         return $this->execRemoteCommand('DRUPAL_BOOTSTRAP_VARIABLES', "print variable_get(\"file_private_path\", \"\");");
     }
 
+    /**
+     * @return string
+     */
     public function getPrivateFilesPath()
     {
         return $this->privateFilesPath;
     }
 
+    /**
+     * @param string $privateFilesPath
+     */
     public function setPrivateFilesPath($privateFilesPath)
     {
         $this->privateFilesPath = $privateFilesPath;
     }
 
     /**
+     * @return array
      * @throws DatabaseDriverNotSupportedException
      * @throws \Exception
      */
@@ -330,11 +345,17 @@ class DrupalSite
         return $credentials;
     }
 
+    /**
+     * @return array
+     */
     public function getDbCredentials()
     {
         return $this->dbCredentials;
     }
 
+    /**
+     * @param array $dbCredentials
+     */
     public function setDbCredentials($dbCredentials)
     {
         $this->dbCredentials = $dbCredentials;
