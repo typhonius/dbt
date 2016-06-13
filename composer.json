@@ -3,7 +3,7 @@
     "description": "Drupal Backup Tool (DBT): A backup solution for multiple Drupal sites",
     "license": "MIT",
     "require": {
-        "php": ">=5.4",
+        "php": ">=5.5",
         "symfony/console": "3.1.*",
         "symfony/filesystem": "3.1.*",
         "symfony/finder": "3.1.*",
