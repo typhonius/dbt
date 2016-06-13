@@ -36,6 +36,8 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
             $site->setBackupPath($backupPath);
         }
 
+        $path = $site->getBackupPath();
+
         switch ($component) {
             case 'code':
             case 'files':
@@ -46,7 +48,7 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 throw new InvalidComponentException(sprintf("The backup component '%s' is invalid. Only code, files and db are accepted.", $component));
         }
 
-        File::prepareDirectory($site->getBackupPath());
+        return File::prepareDirectory($path);
 
     }
 
@@ -60,24 +62,24 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
 
         switch ($component) {
             case 'files':
-                $this->prepareBackupLocation($site, $component);
+                $backupDir = $this->prepareBackupLocation($site, $component);
                 $site->setPublicFilesPath($site->loadPublicFilesPath());
                 // $site->setPrivateFilesPath($site->loadPrivateFilesPath());
 
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$site->getBackupPath()}");
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$backupDir}");
                 break;
 
             case 'code':
-                $this->prepareBackupLocation($site, $component);
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$site->getBackupPath()}");
+                $backupDir = $this->prepareBackupLocation($site, $component);
+                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}");
                 break;
 
             case 'db':
-                $this->prepareBackupLocation($site, $component);
+                $backupDir = $this->prepareBackupLocation($site, $component);
                 $dbCredentials = $site->loadDbCredentials();
 
                 $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'");
-                $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$site->getBackupPath()}/{$site->getId()}.sql.gz";
+                $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$backupDir}/{$site->getId()}.sql.gz";
                 break;
         }
 
