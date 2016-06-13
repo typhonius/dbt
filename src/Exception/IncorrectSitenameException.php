@@ -2,10 +2,12 @@
 
 namespace DrupalBackup\BackupConfig;
 
+use Exception;
+
 /**
  * Class IncorrectSitenameException
  * @package DrupalBackup\BackupConfig
  */
-class IncorrectSitenameException extends \Exception
+class IncorrectSitenameException extends Exception
 {
 }
