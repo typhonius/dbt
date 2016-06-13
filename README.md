@@ -20,7 +20,7 @@ Configuration files are stored in the app/config directory, although this can be
 
 **Server**
 
-At the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key should be included with each server configuration.
+Stored in app/config/servers directory; server configuration should contain, at the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key.
 
 ````
 name: Acquia Server
@@ -43,7 +43,7 @@ key: /Users/example/.ssh/id_rsa
 
 **Site**
 
-Site configuration requires the same human and machine name for each configuration file. It also splits sites to cater for different environments on different servers or at alternate path locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
+Site configuration is stored at app/config/sites and requires the same human and machine name for each configuration file. It also splits sites to cater for different environments on different servers or at alternate path locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
 
 ````
 name: My Personal Blog
