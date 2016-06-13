@@ -78,16 +78,16 @@ The local configuration file provides DBT with values should they be needed. An 
 
 ````
 # Show all possible servers, sites and environments that can be backed up.
-./bin/dbt.php dbt:backup --dry-run"
+./bin/dbt.php dbt:backup --dry-run
   
 # Backup all production websites from all servers.
-./bin/dbt.php dbt:backup --env prod"
+./bin/dbt.php dbt:backup --env prod
   
 # Backup the production databases of both 'adammalone_net' and 'example_docroot' websites.
-./bin/dbt.php dbt:backup --site adammalone_net --site example_docroot --env prod --backup db"
+./bin/dbt.php dbt:backup --site adammalone_net --site example_docroot --env prod --backup db
   
 # Backup any production website hosted on the 'acquia_server' server.
-./bin/dbt.php dbt:backup --server acquia_server --env prod"
+./bin/dbt.php dbt:backup --server acquia_server --env prod
   
 # Create a brand new backup of the production environment from the 'adammalone_net' site using an SSH key password stored in a file.
 ./bin/dbt.php dbt:backup --env prod --site adammalone_net --force --password "$(< /tmp/keypass)"
