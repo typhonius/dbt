@@ -1,0 +1,6 @@
+name: Example Server
+machine: example_server
+hostname: foo.example.com
+user: ubuntu
+port: 15671
+key: /Users/example/.ssh/id_rsa

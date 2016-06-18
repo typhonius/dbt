@@ -1,0 +1,6 @@
+name: Other Example Server
+machine: other_example
+hostname: bar.example.com
+user: ubuntu
+port: 15671
+key: /home/afk/.ssh/id_dsa
