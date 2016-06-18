@@ -83,7 +83,7 @@ EOF
         if ($list = $input->getOption('list')) {
             $table = new Table($output);
             $table
-                ->setHeaders(['Site ID', 'URL', 'Server']);
+                ->setHeaders(['ID (site.environment)', 'URL', 'Server']);
         }
 
         foreach ($docroots as &$docroot) {
