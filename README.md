@@ -14,6 +14,7 @@ This console application provides a quick and configurable way to backup Drupal 
 *  -b, --backup=BACKUP            Select a combination of code, files and db to download only those components (multiple values allowed)
 *  -p, --password=PASSWORD        The SSH Key password to allow automated backup when run non-interactively
 *  -d, --destination=DESTINATION  Manually select where to the site backup destination
+*  -r, --dry-run                  Shows all Docroots, Servers and Environments that would have been backed up
 
 ## Config files
 

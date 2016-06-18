@@ -46,7 +46,7 @@ class File
         }
 
         if ($fs->exists($path) && !is_writeable($path)) {
-            $fs->chown($path, 0700);
+            $fs->chmod($path, 0700);
         } else {
             $fs->mkdir($path, 0700);
         }

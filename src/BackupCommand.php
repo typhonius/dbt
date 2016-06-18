@@ -43,7 +43,7 @@ class BackupCommand extends Command
             ->addOption('env', 'e', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup specific environments', [])
             ->addOption('site', 'w', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup specific sites', [])
             ->addOption('server', 's', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Backup from specific servers', [])
-            ->addOption('dry-run', 'dr', InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments that would have been backed up')
+            ->addOption('dry-run', 'r', InputOption::VALUE_NONE, 'Shows all Docroots, Servers and Environments that would have been backed up')
             ->addOption('pipe', 'i', InputOption::VALUE_NONE, 'Shows the commands required to run the backup')
             ->addOption('list', 'l', InputOption::VALUE_NONE, 'Lists the available sites, servers, and environments to backup')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'If set, the backup will force a new backup into a uniquely named directory')
