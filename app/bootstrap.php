@@ -49,7 +49,7 @@ class DBT
         // Load class Application and add our Classes
         $application = new Application();
         $application->setName('Drupal Backup Tool');
-        $application->setVersion('1.2');
+        $application->setVersion('1.3');
         $application->add(new BackupCommand($config));
         $application->run();
     }

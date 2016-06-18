@@ -17,7 +17,7 @@ class File
     /**
      * @var array $files
      */
-    public $files = array();
+    public $files = [];
 
     /**
      * @param string $path

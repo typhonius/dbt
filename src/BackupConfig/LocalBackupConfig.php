@@ -29,7 +29,7 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
             }
 
             // Create interim directory with unique name if needed.
-            $backupPath = File::prepareDirectory($path, $site->getUnique());
+            $backupPath = File::prepareDirectory($path, $site->isUnique());
 
             // Temporarily cache the backup path for this particular Drupal site so we can store everything within
             // the same uniquely named directory.
@@ -71,6 +71,7 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
 
             case 'code':
                 $backupDir = $this->prepareBackupLocation($site, $component);
+                // @TODO do we want to get the public files path and remove it rather than sites/*/files?
                 $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}");
                 break;
 

@@ -3,6 +3,7 @@
 namespace DrupalBackup\BackupConfig;
 
 use DrupalBackup\DrupalSite;
+use DrupalBackup\Exception\UnsupportedVersionException;
 use DrupalBackup\File;
 
 /**
@@ -19,7 +20,7 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
      * @param array $envs
      * @return array
      */
-    public function getDocroots(array $servers = array(), array $sites = array(), array $envs = array())
+    public function getDocroots(array $servers = [], array $sites = [], array $envs = [])
     {
         $sites = $this->loadSites($sites);
         $servers = $this->loadServers($servers);
@@ -39,8 +40,10 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
 
                 $docrootId = $site['machine'].".".$envName;
                 $docroot = new DrupalSite($docrootId);
-                //$docroot->setEnvironment($envName);
-                //$docroot->setDocroot($site['machine']);
+                if (!in_array($site['version'], [6, 7, 8])) {
+                    throw new UnsupportedVersionException(sprintf("Unsupported Drupal version '%d'.", $site['version']));
+                }
+                $docroot->setVersion($site['version']);
                 $docroot->setPath($environment['path']);
                 $docroot->setUrl($environment['url']);
 
@@ -59,7 +62,7 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
      * @param array $sites
      * @return array
      */
-    public function loadSites($sites = array())
+    public function loadSites($sites = [])
     {
         return $this->loadConfig(self::CONFIG_DIR.'/sites', $sites);
     }
@@ -68,7 +71,7 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
      * @param array $servers
      * @return array
      */
-    public function loadServers($servers = array())
+    public function loadServers($servers = [])
     {
         return $this->loadConfig(self::CONFIG_DIR.'/servers', $servers);
     }
@@ -78,7 +81,7 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
      * @param string $selected
      * @return array
      */
-    public function loadConfig($location, $selected = array())
+    public function loadConfig($location, $selected = [])
     {
         $configs = [];
 

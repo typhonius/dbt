@@ -5,14 +5,15 @@ This console application provides a quick and configurable way to backup Drupal 
 
 ## Options
 
-*  -e, --env=ENV            Backup specific environments (multiple values allowed)
-*  -w, --site=SITE          Backup specific sites (multiple values allowed)
-*  -s, --server=SERVER      Backup from specific servers (multiple values allowed)
-*  -d, --dry-run            Shows all Docroots, Servers and Environments that would have been backed up
-*  -f, --force              If set, the backup will force a new backup into a uniquely named directory.
-*  -b, --backup=BACKUP      Select a combination of code, files and db to download only those components. (multiple values allowed)
-*  -p, --password=PASSWORD  The SSH Key password to allow automated backup when run non-interactively.
-
+*  -e, --env=ENV                  Backup specific environments (multiple values allowed)
+*  -w, --site=SITE                Backup specific sites (multiple values allowed)
+*  -s, --server=SERVER            Backup from specific servers (multiple values allowed)
+*  -i, --pipe                     Shows the commands required to run the backup
+*  -l, --list                     Lists the available sites, servers, and environments to backup
+*  -f, --force                    If set, the backup will force a new backup into a uniquely named directory
+*  -b, --backup=BACKUP            Select a combination of code, files and db to download only those components (multiple values allowed)
+*  -p, --password=PASSWORD        The SSH Key password to allow automated backup when run non-interactively
+*  -d, --destination=DESTINATION  Manually select where to the site backup destination
 
 ## Config files
 
@@ -48,6 +49,7 @@ Site configuration is stored at app/config/sites and requires the same human and
 ````
 name: My Personal Blog
 machine: adammalone_net
+version: 7
 environments:
   prod:
     server: "acquia_server"
@@ -62,6 +64,7 @@ environments:
 ````
 name: "My Example Site"
 machine: "example_docroot"
+version: 8
 environments:
   prod:
     server: "example_server"
@@ -78,7 +81,7 @@ The local configuration file provides DBT with values should they be needed. An 
 
 ````
 # Show all possible servers, sites and environments that can be backed up.
-./bin/dbt.php dbt:backup --dry-run
+./bin/dbt.php dbt:backup --list
   
 # Backup all production websites from all servers.
 ./bin/dbt.php dbt:backup --env prod
