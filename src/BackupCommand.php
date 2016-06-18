@@ -83,14 +83,14 @@ EOF
         if ($list = $input->getOption('list')) {
             $table = new Table($output);
             $table
-                ->setHeaders(['ID (site.environment)', 'URL', 'Server']);
+                ->setHeaders(['ID (site.environment)', 'Version', 'URL', 'Server']);
         }
 
         foreach ($docroots as &$docroot) {
             /* @var $docroot DrupalSite */
 
             if ($list) {
-                $table->addRows([[$docroot->getId(), $docroot->getUrl(), $docroot->getHostname()]]);
+                $table->addRows([[$docroot->getId(), $docroot->getVersion(), $docroot->getUrl(), $docroot->getHostname()]]);
                 continue;
             }
 
