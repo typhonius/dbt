@@ -39,7 +39,7 @@ class DBT
         // Load app configuration
         $localConfig = ROOT_DIR.'/app/config/local/local.config.yml';
         if (!file_exists($localConfig)) {
-            throw new ConfigFileNotFoundException('Local config file not found.');
+            throw new ConfigFileNotFoundException(sprintf("Local config file not found at %s.", $localConfig));
         }
 
         $config = Yaml::parse(file_get_contents($localConfig));

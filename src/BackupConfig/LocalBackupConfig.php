@@ -64,7 +64,7 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
             case 'files':
                 $backupDir = $this->prepareBackupLocation($site, $component);
                 $site->setPublicFilesPath($site->loadPublicFilesPath());
-                // $site->setPrivateFilesPath($site->loadPrivateFilesPath());
+                $site->setPrivateFilesPath($site->loadPrivateFilesPath());
 
                 $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$backupDir}");
                 break;

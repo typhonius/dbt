@@ -2,6 +2,11 @@
 
 This console application provides a quick and configurable way to backup Drupal sites via rsync. Built on the [Symfony](http://symfony.com/) framework and extending the [Command Class](http://api.symfony.com/2.0/Symfony/Component/Console/Command/Command.html) it provides a configurable way of backing up larger numbers of Drupal sites with little effort.
 
+## Getting started
+
+Clone the git repository and copy the `app/config/local/local.config.example` file to `app/config/local/local.config.yml`. Currently the only class shipped with DBT out of the box is `LocalBackupConfig` class which allows backups of remote sites to be stored locally.
+
+Custom classes may be written and used by altering the `class` parameter. The `backup` parameter denotes the default backup location where site backups will be created.
 
 ## Options
 
@@ -18,11 +23,11 @@ This console application provides a quick and configurable way to backup Drupal 
 
 ## Config files
 
-Configuration files are stored in the app/config directory, although this can be overwritten by extending the AbstractDrupalConfigBase class. These configuration files can be loaded to provide not only DBT configuration but also server and environment configuration for backup-able sites.
+Configuration files are stored in the `app/config` directory, although this can be overwritten by extending the `AbstractDrupalConfigBase` class. These configuration files can be loaded to provide not only DBT configuration but also server and environment configuration for backup-able sites.
 
 **Server**
 
-Stored in app/config/servers directory; server configuration should contain, at the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key.
+Stored in `app/config/servers` directory; server configuration should contain, at the bare minimum, a human readable name, machine name, server hostname, ssh user, ssh port and ssh key.
 
 ````
 name: Acquia Server
@@ -45,7 +50,7 @@ key: /Users/example/.ssh/id_rsa
 
 **Site**
 
-Site configuration is stored at app/config/sites and requires the same human and machine name for each configuration file. It also splits sites to cater for different environments on different servers or at alternate path locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
+Site configuration is stored at `app/config/sites` and requires the same human and machine name for each configuration file. It also splits sites to cater for different environments on different servers or at alternate path locations. Each environment should be keyed by a machine name (dev, test, prod etc) and have server, path and url elements. The server value is the machine name of a server config.
 
 ````
 name: My Personal Blog
@@ -75,7 +80,7 @@ environments:
 
 **Local**
 
-The local configuration file provides DBT with values should they be needed. An example of this is seen in the getBackupLocation method of the LocalBackupConfig class where the local storage directory is configured.
+The local configuration file provides DBT with values should they be needed. An example of this is seen in the `getBackupLocation` method of the `LocalBackupConfig` class where the local storage directory is configured.
 
 
 ## Examples
