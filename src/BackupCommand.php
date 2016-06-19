@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+use DrupalBackup\Exception\BackupException;
 use DrupalBackup\BackupConfig\DrupalConfigBaseInterface;
 
 /**
@@ -112,14 +113,22 @@ EOF
             // @TODO should we allow to run non-interactively without SSH key password?
             if (!$docroot->isKeypassEntered()) {
                 if (!$input->isInteractive()) {
-                    throw new \Exception('Unable to run non-interactively without the password option.');
+                    throw new BackupException('Unable to run non-interactively without the password option.');
                 }
                 $helper = $this->getHelper('question');
                 $question = new ConfirmationQuestion(sprintf("<question>Is the SSH key for %s encrypted?</question> ", $docroot->getHostname()), false);
                 if ($helper->ask($input, $output, $question)) {
                     $question = new Question("<question>What is the SSH key password?</question> ");
+                    $question->setValidator(function ($value) {
+                        if (trim($value) == '') {
+                            throw new BackupException('The password can not be empty');
+                        }
+
+                        return $value;
+                    });
                     $question->setHidden(true);
                     $question->setHiddenFallback(false);
+                    $question->setMaxAttempts(3);
                     $password = $helper->ask($input, $output, $question);
                     $docroot->setKeypass($password);
                 }
