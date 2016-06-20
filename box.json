@@ -1,0 +1,21 @@
+{
+    "chmod": "0755",
+    "directories": [
+        "src",
+        "app/config"
+    ],
+    "files": [
+        "app/bootstrap.php"
+    ],
+    "finder": [
+        {
+            "name": "*.php",
+            "exclude": ["Tests"],
+            "in": "vendor"
+        }
+    ],
+    "git-version": "package_version",
+    "main": "bin/dbt.php",
+    "output": "dbt.phar",
+    "stub": true
+}

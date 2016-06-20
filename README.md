@@ -103,6 +103,15 @@ The local configuration file provides DBT with values should they be needed. An 
 
 ````
 
+## Creating a Phar
+
+A phar archive can be created to run DBT instead of utilising the entire codebase. Because much of DBT relies on user configuration of servers and sites, it is currently most appropriate to allow users to generate their own phar files inclusive of their own configuration.
+
+1. Download and install the [box project tool](https://github.com/box-project/box2) for creating phars.
+2. Follow the Getting Started section above to download and configure DBT.
+3. Run `box build` in the directory that DBT has been cloned and configured in. This will use the packaged `box.json` file to create a phar specifically for DBT.
+4. Move dbt.phar to a where it will be used. dbt.phar contains all configured server and site information as well as the code required to run DBT. The phar is now a customised and standalone app.
+
 ## License
 
 DBT is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
