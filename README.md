@@ -1,6 +1,6 @@
 # Drupal Backup Tool (DBT)
 
-This console application provides a quick and configurable way to backup Drupal sites via rsync. Extending Symfony's [Command Class](http://api.symfony.com/2.0/Symfony/Component/Console/Command/Command.html) DBT provides a configurable way of backing up larger numbers of Drupal sites with little effort.
+This console application provides a quick and configurable way to backup Drupal sites via rsync. Extending Symfony's [Command Class](http://api.symfony.com/2.0/Symfony/Component/Console/Command/Command.html), DBT provides a configurable way of backing up larger numbers of Drupal sites with little effort.
 
 ## Getting started
 
