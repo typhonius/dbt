@@ -504,6 +504,29 @@ class DrupalSite
     }
 
     /**
+     * Returns an escaped command without touching arguments within single quotes. This allows wildcards within path
+     * names to be sent to the remote server e.g. 'sites/*'.
+     *
+     * @param string $command
+     * @return string
+     */
+    public function escapeRemoteCommand($command)
+    {
+        // Escape the entire command first.
+        $escapedCommand = escapeshellcmd($command);
+
+        // Match any quoted parts of the array which can be used be arguments
+        preg_match_all('/\'[^\']+\'/', $command, $matches);
+        $matches = current($matches);
+
+        foreach ($matches as $match) {
+            $escapedCommand = str_replace(escapeshellcmd($match), $match, $escapedCommand);
+        }
+
+        return $escapedCommand;
+    }
+
+    /**
      * @return array
      */
     private function getAllowedBackupOptions()

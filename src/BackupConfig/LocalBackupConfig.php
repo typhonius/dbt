@@ -66,20 +66,21 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 $site->setPublicFilesPath($site->loadPublicFilesPath());
                 $site->setPrivateFilesPath($site->loadPrivateFilesPath());
 
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$backupDir}");
+                // @TODO why do we need to do */files/***?
+                $return[] = "rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$backupDir}";
                 break;
 
             case 'code':
                 $backupDir = $this->prepareBackupLocation($site, $component);
                 // @TODO do we want to get the public files path and remove it rather than sites/*/files?
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}");
+                $return[] = "rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}";
                 break;
 
             case 'db':
                 $backupDir = $this->prepareBackupLocation($site, $component);
                 $dbCredentials = $site->loadDbCredentials();
 
-                $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'");
+                $dumpCommand = "mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'";
                 $return[] = "ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} '{$dumpCommand} | gzip -c' > {$backupDir}/{$site->getId()}.sql.gz";
                 break;
         }
