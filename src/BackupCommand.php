@@ -153,9 +153,9 @@ EOF
                     }
 
                     if ($output->isVerbose()) {
-                        passthru($docroot->escapeRemoteCommand($c));
+                        passthru($c);
                     } else {
-                        exec($docroot->escapeRemoteCommand($c));
+                        exec($c);
                     }
                 }
                 $output->writeln(sprintf("<info>%s downloaded to %s</info>", $component, $docroot->getBackupPath()));
