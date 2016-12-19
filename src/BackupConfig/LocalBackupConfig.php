@@ -66,9 +66,8 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 $site->setPublicFilesPath($site->loadPublicFilesPath());
                 $site->setPrivateFilesPath($site->loadPrivateFilesPath());
 
-                // @TODO why do we need to do */files/***?
                 // Use the escapeRemoteCommand method to ensure we encode wildcards correctly.
-                $return[] = $site->escapeRemoteCommand("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' -f '+ */files/***' -f '- *' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()} {$backupDir}");
+                $return[] = $site->escapeRemoteCommand("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '+ */' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/{$site->getPublicFilesPath()}/* {$backupDir}");
                 break;
 
             case 'code':

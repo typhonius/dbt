@@ -158,7 +158,7 @@ EOF
                         exec($c);
                     }
                 }
-                $output->writeln(sprintf("<info>%s downloaded to %s</info>", $component, $docroot->getBackupPath()));
+                $output->writeln(sprintf("<info>%s downloaded to %s/%s</info>", $component, $docroot->getBackupPath(), $component));
             }
 
             // @TODO Run some post download clean up/processing?
