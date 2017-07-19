@@ -73,7 +73,8 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
             case 'code':
                 $backupDir = $this->prepareBackupLocation($site, $component);
                 // @TODO do we want to get the public files path and remove it rather than sites/*/files?
-                $return[] = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- sites/*/files' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}");
+                $filescommand = escapeshellcmd("rsync -e 'ssh -p {$site->getPort()}' -aPhL -f '- RSYNCEXCLUDEFILES' -f '- .git' {$site->getUser()}@{$site->getHostname()}:{$site->getPath()}/ {$backupDir}");
+                $return[] = str_replace('RSYNCEXCLUDEFILES', 'sites/*/files', $filescommand);
                 break;
 
             case 'db':

@@ -319,7 +319,7 @@ class DrupalSite
         switch ($this->getVersion()) {
             case '6':
             case '7':
-                return $this->execRemoteCommand("print variable_get(\"file_public_path\", \"sites/default/files\");", 'DRUPAL_BOOTSTRAP_VARIABLES');
+                return $this->execRemoteCommand("print variable_get(\"file_public_path\", \"sites/default/files\");");
                 break;
             case '8':
                 return $this->execRemoteCommand("use Drupal\Core\StreamWrapper\PublicStream; print PublicStream::basePath();");
@@ -360,7 +360,7 @@ class DrupalSite
         switch ($this->getVersion()) {
             case '6':
             case '7':
-                return $this->execRemoteCommand("print variable_get(\"file_private_path\", \"\");", 'DRUPAL_BOOTSTRAP_VARIABLES');
+                return $this->execRemoteCommand("print variable_get(\"file_private_path\", \"\");");
                 break;
             case '8':
                 return $this->execRemoteCommand("use Drupal\Core\StreamWrapper\PrivateStream; print PrivateStream::basePath();");
