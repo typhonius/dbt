@@ -48,7 +48,8 @@ abstract class AbstractDrupalConfigBase implements DrupalConfigBaseInterface
                 $docroot->setUrl($environment['url']);
 
                 // Cast backup to array in case it is empty in the config file.
-                $docroot->setBackupOptions((array) $environment['backup']);
+                $backupOptions = isset($environment['backup']) ? $environment['backup'] : [];
+                $docroot->setBackupOptions($backupOptions);
 
                 $docroot->setServer($servers[$environment['server']]);
                 $docroots[$docrootId] = $docroot;
