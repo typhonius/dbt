@@ -413,9 +413,16 @@ class DrupalSite
                 ];
                 break;
             case '7':
-            case '8':
                 $databases = unserialize($this->execRemoteCommand("global \$databases; print serialize(\$databases);"));
                 $credentials = &$databases['default']['default'];
+
+                if ($credentials['driver'] !== 'mysql') {
+                    throw new DatabaseDriverNotSupportedException(sprintf("The remote database driver is %s. Only MySQL is accepted.", $credentials['driver']));
+                }
+                break;
+            case '8':
+                $databases = unserialize($this->execRemoteCommand("\$databases = Database::getConnectionInfo(); print serialize(\$databases);"));
+                $credentials = &$databases['default'];
 
                 if ($credentials['driver'] !== 'mysql') {
                     throw new DatabaseDriverNotSupportedException(sprintf("The remote database driver is %s. Only MySQL is accepted.", $credentials['driver']));
@@ -463,7 +470,7 @@ class DrupalSite
                 $remoteCommand = "cd \"{$this->path}\"; php -r '\$_SERVER[\"REMOTE_ADDR\"] = \"127.0.0.1\"; \$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DRUPAL_ROOT\", \"{$this->path}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
                 break;
             case '8':
-                $remoteCommand = "cd \"{$this->path}\"; php -r 'use Symfony\Component\HttpFoundation\Request; use Drupal\Core\DrupalKernel; use Drupal\Core\Site\Settings; \$_SERVER[\"REMOTE_ADDR\"] = \"127.0.0.1\"; \$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DOCROOT\", \"{$this->path}\"); \$autoloader = require_once DOCROOT . \"/../vendor/autoload.php\"; require_once DOCROOT . \"/core/includes/utility.inc\"; \$request = Request::createFromGlobals(); require_once DOCROOT . \"/core/includes/bootstrap.inc\"; DrupalKernel::bootEnvironment(); Settings::initialize(DRUPAL_ROOT, DrupalKernel::findSitePath(\$request), \$autoloader); {$command};'";
+                $remoteCommand = "cd \"{$this->path}\"; php -r 'use Symfony\Component\HttpFoundation\Request; use Drupal\Core\DrupalKernel; use Drupal\Core\Site\Settings; use Drupal\Core\Database\Database; \$_SERVER[\"REMOTE_ADDR\"] = \"127.0.0.1\"; \$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->url}\"; define(\"DOCROOT\", \"{$this->path}\"); \$autoloader = require_once DOCROOT . \"/../vendor/autoload.php\"; require_once DOCROOT . \"/core/includes/utility.inc\"; \$request = Request::createFromGlobals(); require_once DOCROOT . \"/core/includes/bootstrap.inc\"; DrupalKernel::bootEnvironment(); Settings::initialize(DRUPAL_ROOT, DrupalKernel::findSitePath(\$request), \$autoloader); {$command};'";
                 break;
             default:
                 throw new UnsupportedVersionException(sprintf("Unsupported Drupal version '%d'.", $this->getVersion()));

@@ -81,10 +81,14 @@ class LocalBackupConfig extends AbstractDrupalConfigBase
                 $backupDir = $this->prepareBackupLocation($site, $component);
                 $dbCredentials = $site->loadDbCredentials();
 
+                // Double escape the password as this often has special characters in it.
+                $password = escapeshellarg($dbCredentials['password']);
+
                 // Escape the user input values but not the command specified pipe or input redirection.
-                $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$dbCredentials['password']}' '{$dbCredentials['database']}'");
+                $dumpCommand = escapeshellcmd("mysqldump '-h{$dbCredentials['host']}' '-P{$dbCredentials['port']}' '-u{$dbCredentials['username']}' '-p{$password}' '{$dbCredentials['database']}'");
                 $sshCommand = escapeshellcmd("ssh -p{$site->getPort()} {$site->getUser()}@{$site->getHostname()} :gzip {$backupDir}/{$site->getId()}.sql.gz");
                 $return[] = str_replace(':gzip', "'{$dumpCommand} | gzip -c' >", $sshCommand);
+
                 break;
         }
 
