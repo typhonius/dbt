@@ -1,12 +1,12 @@
 <?php
 
-namespace DrupalBackup\Exception;
+namespace DBT\Exception;
 
 use Exception;
 
 /**
  * Class Ssh2ConnectionException
- * @package DrupalBackup\Exception
+ * @package DBT\Exception
  */
 class Ssh2ConnectionException extends Exception
 {

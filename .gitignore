@@ -1,6 +1,5 @@
 backups
-app/config/sites/*
-app/config/servers/*
-app/config/local/*
+config/sites/*.yml
+config/servers/*.yml
 .idea
 vendor

@@ -1,12 +1,12 @@
 <?php
 
-namespace DrupalBackup\Exception;
+namespace DBT\Exception;
 
 use Exception;
 
 /**
  * Class InvalidComponentException
- * @package DrupalBackup\Exception
+ * @package DBT\Exception
  */
 class InvalidComponentException extends Exception
 {

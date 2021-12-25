@@ -3,16 +3,16 @@
     "description": "Drupal Backup Tool (DBT): A backup solution for multiple Drupal sites",
     "license": "MIT",
     "require": {
-        "php": ">=5.5",
-        "symfony/console": "3.1.*",
-        "symfony/filesystem": "3.1.*",
-        "symfony/finder": "3.1.*",
-        "symfony/yaml": "3.1.*"
+        "php": ">=8",
+        "symfony/console": "^6",
+        "phpseclib/phpseclib": "^3",
+        "symfony/finder": "^6",
+        "symfony/yaml": "^6",
+        "symfony/filesystem": "^6"
     },
     "autoload": {
-        "files": ["app/bootstrap.php"],
         "psr-4": {
-            "DrupalBackup\\": "src/"
+            "DBT\\": "src/"
         }
     },
     "authors": [

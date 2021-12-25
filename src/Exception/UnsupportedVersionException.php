@@ -1,12 +1,12 @@
 <?php
 
-namespace DrupalBackup\Exception;
+namespace DBT\Exception;
 
 use Exception;
 
 /**
  * Class UnsupportedVersionException
- * @package DrupalBackup\Exception
+ * @package DBT\Exception
  */
 class UnsupportedVersionException extends Exception
 {

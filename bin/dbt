@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+require_once dirname(__DIR__).'/vendor/autoload.php';
+
+use DBT\Commands\ListSitesCommand;
+use DBT\Commands\ListServersCommand;
+use DBT\Commands\BackupCommand;
+use Symfony\Component\Console\Application;
+
+define('DBT_ROOT', dirname(__DIR__) . '/');
+define('DBT_CONFIG', DBT_ROOT . 'config/');
+
+$app = new Application();
+$app->setName('Drupal Backup Tool');
+$app->setVersion('2.0');
+$app->add(new ListSitesCommand());
+$app->add(new ListServersCommand());
+$app->add(new BackupCommand());
+$app->run();

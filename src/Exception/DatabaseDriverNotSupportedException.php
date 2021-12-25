@@ -1,12 +1,12 @@
 <?php
 
-namespace DrupalBackup\Exception;
+namespace DBT\Exception;
 
 use Exception;
 
 /**
  * Class DatabaseDriverNotSupportedException
- * @package DrupalBackup\Exception
+ * @package DBT\Exception
  */
 class DatabaseDriverNotSupportedException extends Exception
 {

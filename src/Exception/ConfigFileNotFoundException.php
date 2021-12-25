@@ -1,12 +1,12 @@
 <?php
 
-namespace DrupalBackup\Exception;
+namespace DBT\Exception;
 
 use Exception;
 
 /**
  * Class ConfigFileNotFoundException
- * @package DrupalBackup\Exception
+ * @package DBT\Exception
  */
 class ConfigFileNotFoundException extends Exception
 {
