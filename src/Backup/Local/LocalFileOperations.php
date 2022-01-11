@@ -1,7 +1,8 @@
 <?php
 
-namespace DBT\Backup;
+namespace DBT\Backup\Local;
 
+use DBT\Backup\Backup;
 use DBT\Structures\Environment;
 use phpseclib3\Net\SFTP;
 use Symfony\Component\Filesystem\Exception\IOException;

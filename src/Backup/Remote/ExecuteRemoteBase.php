@@ -1,6 +1,6 @@
 <?php
 
-namespace DBT\Backup;
+namespace DBT\Backup\Remote;
 
 use DBT\Exception\DatabaseDriverNotSupportedException;
 use DBT\Structures\Environment;

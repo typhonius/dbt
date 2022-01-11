@@ -1,6 +1,6 @@
 <?php
 
-namespace DBT\Backup;
+namespace DBT\Backup\Remote;
 
 use DBT\Exception\DatabaseDriverNotSupportedException;
 
@@ -10,7 +10,7 @@ class ExecuteRemote6 extends ExecuteRemoteBase
     public function send($command = '', $bootstrap = 'DRUPAL_BOOTSTRAP_FULL')
     {
         $remoteCommand = "cd \"{$this->environment->path}\"; php -r '\$_SERVER[\"REMOTE_ADDR\"] = \"127.0.0.1\"; \$_SERVER[\"SCRIPT_NAME\"] = \"/\"; \$_SERVER[\"HTTP_HOST\"] = \"{$this->environment->url}\"; define(\"DRUPAL_ROOT\", \"{$this->environment->path}\"); require_once DRUPAL_ROOT . \"/includes/bootstrap.inc\"; drupal_bootstrap({$bootstrap}); {$command};'";
-        
+
         return $this->ssh->exec($remoteCommand);
     }
 

@@ -2,6 +2,7 @@
 
 namespace DBT\Backup;
 
+use DBT\Backup\Local\LocalFileOperations;
 use DBT\Config\ConfigLoader;
 use DBT\Exception\InvalidComponentException;
 use DBT\Exception\BackupException;
@@ -138,7 +139,7 @@ class Backup
         if (!$ssh->login($server->getUser(), $server->getKey($this->password))) {
             throw new Ssh2ConnectionException('Login failed');
         }
-        $class = sprintf('\DBT\Backup\ExecuteRemote%d', $site->getVersion());
+        $class = sprintf('\DBT\Backup\Remote\ExecuteRemote%d', $site->getVersion());
         $remote = new $class($ssh, $site, $environment);
 
         foreach ($this->backup as $backup) {

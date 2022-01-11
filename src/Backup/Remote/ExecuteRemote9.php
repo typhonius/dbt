@@ -1,6 +1,6 @@
 <?php
 
-namespace DBT\Backup;
+namespace DBT\Backup\Remote;
 
 class ExecuteRemote9 extends ExecuteRemote8
 {
