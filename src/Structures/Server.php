@@ -2,6 +2,7 @@
 
 namespace DBT\Structures;
 
+use phpseclib3\Crypt\Common\AsymmetricKey;
 use phpseclib3\Crypt\PublicKeyLoader;
 
 class Server
@@ -11,9 +12,9 @@ class Server
     public $hostname;
     public $user;
     public $port;
-    public $key;
     public $password;
-    public $hostkey;
+    public $key;
+    public ?string $hostKey = null;
 
     public function __construct($server)
     {
@@ -22,38 +23,34 @@ class Server
         $this->hostname = $server['hostname'];
         $this->user = $server['user'];
         $this->port = $server['port'];
-        if (isset($server['key'])) {
-            $this->key = $server['key'];
-        }
-        if (isset($server['hostkey'])) {
-            $this->hostKey = $server['hostkey'];
-        }
+        $this->key = $server['key'] ?: null;
+        $this->hostKey = $server['hostkey'] ?: null;
     }
 
-    public function getHostname()
+    public function getHostname() : string
     {
         return $this->hostname;
     }
 
 
-    public function getPort()
+    public function getPort() : string
     {
         return $this->port;
     }
 
-    public function getUser()
+    public function getUser() : string
     {
         return $this->user;
     }
 
-    public function setPassword($password)
+    public function setPassword($password) : Server
     {
         $this->password = $password;
 
         return $this;
     }
 
-    public function getKey($password = null)
+    public function getKey($password = null) : AsymmetricKey|string
     {
         if ($this->key) {
             if ($password) {
@@ -64,12 +61,12 @@ class Server
         return $password;
     }
 
-    public function getPassword()
+    public function getPassword() : ?string
     {
         return $this->password;
     }
 
-    public function getHostKey()
+    public function getHostKey() : ?string
     {
         return $this->hostKey;
     }

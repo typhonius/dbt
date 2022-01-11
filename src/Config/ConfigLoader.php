@@ -7,11 +7,10 @@ use Symfony\Component\Yaml\Yaml;
 use DBT\Structures\Site;
 use DBT\Structures\Server;
 
-class ConfigLoader
+final class ConfigLoader
 {
 
     public $sites = [];
-
     public $servers = [];
 
     public static function instantiate()
@@ -19,7 +18,7 @@ class ConfigLoader
         return new static();
     }
 
-    public function loadAll()
+    public function loadAll() : ConfigLoader
     {
         $this->sites = self::loadSites();
         $this->servers = self::loadServers();
@@ -27,17 +26,17 @@ class ConfigLoader
         return $this;
     }
 
-    public function getSites()
+    public function getSites() : array
     {
         return $this->sites;
     }
 
-    public function getServers()
+    public function getServers() : array
     {
         return $this->servers;
     }
 
-    public function loadSites($name = ['*'])
+    public function loadSites($name = ['*']) : array
     {
         $sites = [];
 
@@ -49,7 +48,7 @@ class ConfigLoader
         return $sites;
     }
 
-    public function loadServers($name = ['*'])
+    public function loadServers($name = ['*']) : array
     {
         $servers = [];
 
@@ -61,7 +60,7 @@ class ConfigLoader
         return $servers;
     }
 
-    public function loadAndParse($configPath, $name = ['*'])
+    public function loadAndParse($configPath, $name = ['*']) : array
     {
         $config = [];
 

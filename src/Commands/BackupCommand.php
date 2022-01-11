@@ -52,12 +52,10 @@ EOF
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln(sprintf('Hello World!, %s', 'you'));
-
         $config = ConfigLoader::instantiate();
         $filesystem = new Filesystem();
 
-        $backup = new Backup($config, $filesystem, $input);
+        $backup = new Backup($config, $filesystem, $output);
         $backup->setPassword($input->getOption('password'));
 
         if (!$input->getOption('password')) {

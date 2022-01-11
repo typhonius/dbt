@@ -4,8 +4,8 @@ namespace DBT\Structures;
 
 class Site
 {
-    public $id;
     public $name;
+    public $machine;
     public $version;
     public $environments = [];
 
@@ -17,19 +17,21 @@ class Site
         $this->parseEnvironments($site['environments']);
     }
 
-    private function parseEnvironments($environments)
+    private function parseEnvironments($environments) : Site
     {
         foreach ($environments as $key => $environment) {
             $this->environments[$key] = new Environment($this->machine, $key, $environment);
         }
+
+        return $this;
     }
 
-    public function getEnvironments()
+    public function getEnvironments() : array
     {
         return $this->environments;
     }
 
-    public function getVersion()
+    public function getVersion() : string
     {
         return $this->version;
     }

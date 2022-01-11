@@ -13,7 +13,7 @@ class LocalFileOperations
     public SFTP $sftp;
     public Environment $environment;
     public Backup $backup;
-    public string $uniqueId;
+    public $uniqueId;
 
     public function __construct(Filesystem $filesystem, SFTP $sftp, Environment $environment, Backup $backup)
     {
@@ -26,6 +26,11 @@ class LocalFileOperations
     public function generateBackupLocation()
     {
         $path = sprintf("%s%s%s/%s", DBT_ROOT, $this->backup->getBackupDestination(), $this->environment->id, date('Y-m-d'));
+
+        if (strpos($this->backup->getBackupDestination(), '/') === 0) {
+            $path = sprintf("%s%s/%s", $this->backup->getBackupDestination(), $this->environment->id, date('Y-m-d'));
+        }
+
         if (true === $this->backup->getUnique()) {
             $path = $this->getUniqueDirectoryName($path);
         }
@@ -36,15 +41,7 @@ class LocalFileOperations
     public function prepareBackupLocation()
     {
         $path = $this->generateBackupLocation();
-
-        // @TODO use Symfony path here
-        // Do a makeAbsolute() or a Path::canonicalize()
-
-        if (strpos($this->backup->getBackupDestination(), '/') === 0) {
-            $path = sprintf("%s%s/%s", $this->backup->getBackupDestination(), $this->environment->id, date('Y-m-d'));
-        }
-
-        $path = $this->prepareDirectory($path);
+        $this->prepareDirectory($path);
 
         foreach (['code', 'db', 'files'] as $component) {
             $this->prepareDirectory($path . '/' . $component);
@@ -63,7 +60,9 @@ class LocalFileOperations
             if (is_object($data)) {
                 if ($data->type == 1) {
                     $local = $this->generateBackupLocation() . '/files/' . $iterantPath;
+                    // @TODO change this to be $remote->loadPublicFilesPath();
                     $remote = $this->environment->path . '/sites/default/files/' . $iterantPath;
+                    // echo sprintf('Backing up %s to %s', $remote, $local);
                     $this->sftp->get($remote, $local);
                 }
             }
@@ -78,13 +77,14 @@ class LocalFileOperations
     public function prepareDirectory($path)
     {
         // @TODO use Symfony path here
+        // Do a makeAbsolute() or a Path::canonicalize()
         if ($this->filesystem->exists($path) && !is_writeable($path)) {
             $this->filesystem->chmod($path, 0700);
         } else {
             $this->filesystem->mkdir($path, 0700);
         }
 
-        return $path;
+        return $this;
     }
 
     public function getUniqueDirectoryName($path)

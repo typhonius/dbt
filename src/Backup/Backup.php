@@ -4,9 +4,11 @@ namespace DBT\Backup;
 
 use DBT\Config\ConfigLoader;
 use DBT\Exception\InvalidComponentException;
+use DBT\Exception\BackupException;
+use DBT\Exception\Ssh2ConnectionException;
 use phpseclib3\Net\SSH2;
 use phpseclib3\Net\SFTP;
-use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Backup
@@ -16,18 +18,19 @@ class Backup
     public array $servers = ['*'];
     public array $backup = ['code', 'db', 'files'];
     public string $destination = 'backups';
+    public bool $unique = false;
     protected $password;
 
     protected $allowedServers = [];
 
     protected ConfigLoader $configLoader;
-    protected InputInterface $input;
+    protected OutputInterface $output;
     protected Filesystem $filesystem;
 
-    public function __construct(ConfigLoader $configLoader, Filesystem $filesystem, InputInterface $input)
+    public function __construct(ConfigLoader $configLoader, Filesystem $filesystem, OutputInterface $output)
     {
         $this->configLoader = $configLoader;
-        $this->input = $input;
+        $this->output = $output;
         $this->filesystem = $filesystem;
     }
 
@@ -113,17 +116,18 @@ class Backup
     protected function download($site, $environment)
     {
         if (!array_key_exists($environment->server, $this->allowedServers)) {
-            echo 'server not in available list';
-            die;
+            throw new BackupException('Server not in available list');
         }
 
         $server = $this->allowedServers[$environment->server];
         $ssh = new SSH2($server->getHostname(), $server->getPort());
         $sftp = new SFTP($server->getHostname(), $server->getPort());
+        $sftp->setTimeout(0);
+        $sftp->setKeepAlive(10);
 
         if ($expected = $server->getHostkey()) {
             if ($expected != $ssh->getServerPublicHostKey()) {
-                throw new \Exception('Host key verification failed');
+                throw new Ssh2ConnectionException('Host key verification failed');
             }
         }
 
@@ -131,26 +135,32 @@ class Backup
 
         $localFileOps->prepareBackupLocation();
 
+        if (!$ssh->login($server->getUser(), $server->getKey($this->password))) {
+            throw new Ssh2ConnectionException('Login failed');
+        }
+        $class = sprintf('\DBT\Backup\ExecuteRemote%d', $site->getVersion());
+        $remote = new $class($ssh, $site, $environment);
+
         foreach ($this->backup as $backup) {
-            $debug = sprintf("Downloading %s from %s", $backup, $environment->id);
-            var_dump($debug);
-
+            $this->output->writeln(sprintf("<comment>Downloading %s from %s</comment>", $backup, $environment->id));
             if ($backup === 'db') {
-                if (!$ssh->login($server->getUser(), $server->getKey($this->password))) {
-                    throw new \Exception('Login failed');
-                }
-
-                $remote = new ExecuteRemote($ssh, $site, $environment);
                 $database = $remote->downloadDatabase();
-
                 file_put_contents($localFileOps->generateBackupLocation() . '/db/' . $environment->id . '.sql', $database);
             } elseif ($backup === 'files') {
-                $sftp->login($server->getUser(), $server->getKey($this->password));
+                if (!$sftp->login($server->getUser(), $server->getKey($this->password))) {
+                    throw new Ssh2ConnectionException('Login failed');
+                }
 
-                $listing = $sftp->rawlist($environment->path . '/sites/default/files', true);
-
+                $listing = $sftp->rawlist($environment->path . '/' . $remote->loadPublicFilesPath(), true);
+                var_dump($listing);
+                die;
                 $localFileOps->recursiveDownload($listing);
+                if ($private = $remote->loadPrivateFilesPath()) {
+                    $listing = $sftp->rawlist($environment->path . $private, true);
+                    $localFileOps->recursiveDownload($listing);
+                }
             }
+            $this->output->writeln(sprintf("<info>%s downloaded to %s/%s</info>", $backup, $localFileOps->generateBackupLocation(), $backup));
         }
 
         $ssh->disconnect();
