@@ -153,8 +153,6 @@ class Backup
                 }
 
                 $listing = $sftp->rawlist($environment->path . '/' . $remote->loadPublicFilesPath(), true);
-                var_dump($listing);
-                die;
                 $localFileOps->recursiveDownload($listing);
                 if ($private = $remote->loadPrivateFilesPath()) {
                     $listing = $sftp->rawlist($environment->path . $private, true);
